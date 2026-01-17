@@ -154,7 +154,7 @@ router.get('/getGlobalItemsScanned', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('totals');
+    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
     const docSnapshot = await globalTotalsRef.get();
 
     let globalItemsScanned = 0;
@@ -289,7 +289,7 @@ router.post('/incrementGlobalUserCount', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('totals');
+    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
     const incrementAmount = req.body.amount || 1;
 
     const newCount = await db.runTransaction(async (transaction) => {
@@ -336,7 +336,7 @@ router.get('/getGlobalUserCount', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('totals');
+    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
     const docSnapshot = await globalTotalsRef.get();
 
     let globalUserCount = 0;
@@ -421,7 +421,7 @@ router.post('/createUser', async (req, res) => {
 
       // Increment global user count
       transaction.update(globalTotalsRef, {
-        globalUserCount: admin.firestore.FieldValue.increment(1)
+        globalUserCount: FieldValue.increment(1)
       });
     });
 
@@ -486,6 +486,117 @@ router.get('/getUser/:userId', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve user profile.',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/getUserByUUID/:uuid
+ * Get a user's profile by UUID
+ */
+router.get('/getUserByUUID/:uuid', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({
+      success: false,
+      message: 'Firebase is not initialized. Please configure Firebase credentials.',
+    });
+  }
+
+  try {
+    const { uuid } = req.params;
+    const usersRef = db.collection('appData');
+    
+    // Query users by UUID field
+    const snapshot = await usersRef.where('UUID', '==', uuid).limit(1).get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({
+        success: false,
+        message: `User with UUID ${uuid} not found.`,
+      });
+    }
+
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    return res.status(200).json({
+      success: true,
+      userId: userDoc.id,
+      UUID: uuid,
+      user: userData,
+      message: 'Successfully retrieved user profile by UUID.'
+    });
+  } catch (error) {
+    console.error('Error getting user by UUID:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve user profile by UUID.',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/getTopUsers
+ * Get the top 3 users ranked by items scanned
+ */
+router.get('/getTopUsers', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({
+      success: false,
+      message: 'Firebase is not initialized. Please configure Firebase credentials.',
+    });
+  }
+
+  try {
+    const usersRef = db.collection('appData');
+    
+    // Query users ordered by totalItemsScannedByUser descending, limit to 3
+    const snapshot = await usersRef
+      .orderBy('totalItemsScannedByUser', 'desc')
+      .limit(3)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(200).json({
+        success: true,
+        topUsers: [],
+        message: 'No users found.'
+      });
+    }
+
+    const topUsers = [];
+    snapshot.forEach(doc => {
+      const userData = doc.data();
+      topUsers.push({
+        username: userData.username || 'Unknown',
+        totalItemsScannedByUser: userData.totalItemsScannedByUser || 0,
+        UUID: userData.UUID || null
+      });
+    });
+
+    return res.status(200).json({
+      success: true,
+      topUsers: topUsers,
+      message: 'Successfully retrieved top 3 users.'
+    });
+  } catch (error) {
+    console.error('Error getting top users:', error);
+    
+    // If the error is due to missing index, provide helpful message
+    if (error.message && error.message.includes('index')) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve top users. Firestore index may need to be created.',
+        error: 'Please create a composite index on appData collection for totalItemsScannedByUser (descending)',
+        hint: 'Visit Firebase Console → Firestore → Indexes to create the required index'
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve top users.',
       error: error.message
     });
   }

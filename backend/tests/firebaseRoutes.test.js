@@ -36,20 +36,38 @@ const createMockFirestore = () => {
     return docRefs.get(key);
   };
 
+  // Cache collection objects so we can override methods in tests
+  const collectionCache = new Map();
+
   const mockDb = {
     collection: jest.fn((collectionName) => {
-      return {
-        doc: jest.fn((docId) => {
-          if (collectionName === 'globalStats' && docId === 'totals') {
-            return mockGlobalStatsRef;
-          }
-          // For user documents, reuse the same ref for the same userId
-          if (collectionName === 'appData') {
+      // Return the same collection object for the same collection name
+      // This allows tests to override methods and have them persist
+      if (!collectionCache.has(collectionName)) {
+        collectionCache.set(collectionName, {
+          doc: jest.fn((docId) => {
+            if (collectionName === 'globalStats' && (docId === 'totals' || docId === '4RcobOeey7WWoDIXVTmm')) {
+              return mockGlobalStatsRef;
+            }
+            // For user documents, reuse the same ref for the same userId
+            if (collectionName === 'appData') {
+              return getDocRef(collectionName, docId);
+            }
             return getDocRef(collectionName, docId);
-          }
-          return getDocRef(collectionName, docId);
-        }),
-      };
+          }),
+          where: jest.fn(() => ({
+            limit: jest.fn(() => ({
+              get: jest.fn()
+            }))
+          })),
+          orderBy: jest.fn(() => ({
+            limit: jest.fn(() => ({
+              get: jest.fn()
+            }))
+          })),
+        });
+      }
+      return collectionCache.get(collectionName);
     }),
     runTransaction: jest.fn(),
   };
@@ -468,6 +486,99 @@ const createTestRoutes = (testDb) => {
       return res.status(500).json({
         success: false,
         message: 'Failed to retrieve user profile.',
+        error: error.message
+      });
+    }
+  });
+
+  router.get('/getUserByUUID/:uuid', async (req, res) => {
+    if (!testDb) {
+      return res.status(503).json({
+        success: false,
+        message: 'Firebase is not initialized. Please configure Firebase credentials.',
+      });
+    }
+
+    try {
+      const { uuid } = req.params;
+      const usersRef = testDb.collection('appData');
+      const snapshot = await usersRef.where('UUID', '==', uuid).limit(1).get();
+
+      if (snapshot.empty) {
+        return res.status(404).json({
+          success: false,
+          message: `User with UUID ${uuid} not found.`,
+        });
+      }
+
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data();
+      return res.status(200).json({
+        success: true,
+        userId: userDoc.id,
+        UUID: uuid,
+        user: userData,
+        message: 'Successfully retrieved user profile by UUID.'
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve user profile by UUID.',
+        error: error.message
+      });
+    }
+  });
+
+  router.get('/getTopUsers', async (req, res) => {
+    if (!testDb) {
+      return res.status(503).json({
+        success: false,
+        message: 'Firebase is not initialized. Please configure Firebase credentials.',
+      });
+    }
+
+    try {
+      const usersRef = testDb.collection('appData');
+      const snapshot = await usersRef
+        .orderBy('totalItemsScannedByUser', 'desc')
+        .limit(3)
+        .get();
+
+      if (snapshot.empty) {
+        return res.status(200).json({
+          success: true,
+          topUsers: [],
+          message: 'No users found.'
+        });
+      }
+
+      const topUsers = [];
+      snapshot.forEach(doc => {
+        const userData = doc.data();
+        topUsers.push({
+          username: userData.username || 'Unknown',
+          totalItemsScannedByUser: userData.totalItemsScannedByUser || 0,
+          UUID: userData.UUID || null
+        });
+      });
+
+      return res.status(200).json({
+        success: true,
+        topUsers: topUsers,
+        message: 'Successfully retrieved top 3 users.'
+      });
+    } catch (error) {
+      if (error.message && error.message.includes('index')) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to retrieve top users. Firestore index may need to be created.',
+          error: 'Please create a composite index on appData collection for totalItemsScannedByUser (descending)',
+          hint: 'Visit Firebase Console → Firestore → Indexes to create the required index'
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve top users.',
         error: error.message
       });
     }
@@ -1107,6 +1218,203 @@ describe('Firebase Routes', () => {
       expect(response.body.user.username).toBe('TestUser');
       expect(response.body.user.UUID).toBe('test-uuid');
       expect(response.body.user.individualTrees).toBe(5);
+    });
+  });
+
+  describe('GET /api/getUserByUUID/:uuid', () => {
+    it('should return 503 if Firebase is not initialized', async () => {
+      const appWithoutDb = express();
+      appWithoutDb.use(express.json());
+      appWithoutDb.use('/api', createTestRoutes(null));
+
+      const response = await request(appWithoutDb)
+        .get('/api/getUserByUUID/test-uuid')
+        .expect(503);
+
+      expect(response.body.message).toBe('Firebase is not initialized. Please configure Firebase credentials.');
+    });
+
+    it('should return 404 if user with UUID does not exist', async () => {
+      const uuid = 'non-existent-uuid';
+      const usersRef = mocks.mockDb.collection('appData');
+      usersRef.where.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({ empty: true })
+        }))
+      }));
+
+      const response = await request(app)
+        .get(`/api/getUserByUUID/${uuid}`)
+        .expect(404);
+
+      expect(response.body.message).toContain('not found');
+    });
+
+    it('should return user profile by UUID', async () => {
+      const uuid = 'test-uuid-123';
+      const userId = 'user-doc-id';
+      const mockUserData = {
+        username: 'TestUser',
+        UUID: uuid,
+        People: 1,
+        totalItemsScannedByUser: 10,
+        individualTrees: 5
+      };
+
+      const mockDoc = {
+        id: userId,
+        data: jest.fn(() => mockUserData)
+      };
+
+      const usersRef = mocks.mockDb.collection('appData');
+      usersRef.where.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({
+            empty: false,
+            docs: [mockDoc]
+          })
+        }))
+      }));
+
+      const response = await request(app)
+        .get(`/api/getUserByUUID/${uuid}`)
+        .expect(200);
+
+      expect(response.body.user.username).toBe('TestUser');
+      expect(response.body.user.UUID).toBe(uuid);
+      expect(response.body.userId).toBe(userId);
+      expect(response.body.UUID).toBe(uuid);
+    });
+  });
+
+  describe('GET /api/getTopUsers', () => {
+    it('should return 503 if Firebase is not initialized', async () => {
+      const appWithoutDb = express();
+      appWithoutDb.use(express.json());
+      appWithoutDb.use('/api', createTestRoutes(null));
+
+      const response = await request(appWithoutDb)
+        .get('/api/getTopUsers')
+        .expect(503);
+
+      expect(response.body.message).toBe('Firebase is not initialized. Please configure Firebase credentials.');
+    });
+
+    it('should return empty array when no users exist', async () => {
+      const usersRef = mocks.mockDb.collection('appData');
+      usersRef.orderBy.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({ empty: true })
+        }))
+      }));
+
+      const response = await request(app)
+        .get('/api/getTopUsers')
+        .expect(200);
+
+      expect(response.body.topUsers).toEqual([]);
+      expect(response.body.success).toBe(true);
+    });
+
+    it('should return top 3 users ranked by items scanned', async () => {
+      const mockUsers = [
+        { id: 'user1', data: () => ({ username: 'TopUser', UUID: 'uuid1', totalItemsScannedByUser: 150 }) },
+        { id: 'user2', data: () => ({ username: 'SecondUser', UUID: 'uuid2', totalItemsScannedByUser: 120 }) },
+        { id: 'user3', data: () => ({ username: 'ThirdUser', UUID: 'uuid3', totalItemsScannedByUser: 100 }) }
+      ];
+
+      const usersRef = mocks.mockDb.collection('appData');
+      const mockSnapshot = {
+        empty: false,
+        forEach: jest.fn((callback) => {
+          mockUsers.forEach(callback);
+        })
+      };
+
+      usersRef.orderBy.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue(mockSnapshot)
+        }))
+      }));
+
+      const response = await request(app)
+        .get('/api/getTopUsers')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.topUsers).toHaveLength(3);
+      expect(response.body.topUsers[0].username).toBe('TopUser');
+      expect(response.body.topUsers[0].totalItemsScannedByUser).toBe(150);
+      expect(response.body.topUsers[1].username).toBe('SecondUser');
+      expect(response.body.topUsers[1].totalItemsScannedByUser).toBe(120);
+      expect(response.body.topUsers[2].username).toBe('ThirdUser');
+      expect(response.body.topUsers[2].totalItemsScannedByUser).toBe(100);
+    });
+
+    it('should handle users with missing fields gracefully', async () => {
+      const mockUsers = [
+        { id: 'user1', data: () => ({ username: 'User1', totalItemsScannedByUser: 50 }) },
+        { id: 'user2', data: () => ({ UUID: 'uuid2', totalItemsScannedByUser: 30 }) },
+        { id: 'user3', data: () => ({ username: 'User3' }) }
+      ];
+
+      const usersRef = mocks.mockDb.collection('appData');
+      const mockSnapshot = {
+        empty: false,
+        forEach: jest.fn((callback) => {
+          mockUsers.forEach(callback);
+        })
+      };
+
+      usersRef.orderBy.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue(mockSnapshot)
+        }))
+      }));
+
+      const response = await request(app)
+        .get('/api/getTopUsers')
+        .expect(200);
+
+      expect(response.body.topUsers).toHaveLength(3);
+      expect(response.body.topUsers[0].username).toBe('User1');
+      expect(response.body.topUsers[0].totalItemsScannedByUser).toBe(50);
+      expect(response.body.topUsers[1].username).toBe('Unknown');
+      expect(response.body.topUsers[1].totalItemsScannedByUser).toBe(30);
+      expect(response.body.topUsers[2].username).toBe('User3');
+      expect(response.body.topUsers[2].totalItemsScannedByUser).toBe(0);
+    });
+
+    it('should return helpful error message when index is missing', async () => {
+      const usersRef = mocks.mockDb.collection('appData');
+      usersRef.orderBy.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockRejectedValue(new Error('The query requires an index'))
+        }))
+      }));
+
+      const response = await request(app)
+        .get('/api/getTopUsers')
+        .expect(500);
+
+      expect(response.body.message).toContain('index');
+      expect(response.body.hint).toBeDefined();
+    });
+
+    it('should handle other errors', async () => {
+      const usersRef = mocks.mockDb.collection('appData');
+      usersRef.orderBy.mockImplementation(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockRejectedValue(new Error('Firestore error'))
+        }))
+      }));
+
+      const response = await request(app)
+        .get('/api/getTopUsers')
+        .expect(500);
+
+      expect(response.body.message).toBe('Failed to retrieve top users.');
+      expect(response.body.error).toBe('Firestore error');
     });
   });
 
