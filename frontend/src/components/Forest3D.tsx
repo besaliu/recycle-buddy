@@ -18,6 +18,13 @@ interface Forest3DProps {
     areaSize?: number;
 }
 
+interface TreeInstanceData {
+    position: [number, number, number];
+    scale: number;
+    rotation: number;
+    type: number;
+}
+
 export function Forest3D({ count, areaSize = 30 }: Forest3DProps) {
     return (
         <Canvas
@@ -93,7 +100,7 @@ function ForestScene({ count, areaSize = 25 }: Forest3DProps) {
     );
 }
 
-function BakedInstances({ modelPath, data }: { modelPath: string, data: any[] }) {
+function BakedInstances({ modelPath, data }: { modelPath: string, data: TreeInstanceData[] }) {
     const { scene } = useGLTF(modelPath);
 
     // Bake geometry: flatten the scene into a list of meshes with transforms applied to geometry
