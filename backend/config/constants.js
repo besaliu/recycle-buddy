@@ -78,5 +78,5 @@ export const APP_CONFIG = {
 
 export const FILE_UPLOAD_CONFIG = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
-  allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
+  allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'],
 };

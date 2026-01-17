@@ -1,5 +1,5 @@
 import { openRouter } from '../config/openRouter.js';
-import { bufferToBase64, imageToBase64 } from '../utils/imageUtils.js';
+import { imageToBase64, processImage } from '../utils/imageUtils.js';
 import { buildRecyclingPrompt } from './promptService.js';
 
 /**
@@ -11,23 +11,23 @@ import { buildRecyclingPrompt } from './promptService.js';
  * @param {string} options.imagePath - Path to an image file to include (local file path)
  * @param {string} options.imageUrl - URL to an image to include (public URL)
  * @param {string} options.imageBase64 - Base64-encoded image data (data:image/...;base64,...)
- * @returns {Promise<string>} - The response from the model
+ * @returns {Promise<Object>} - The response from the model
  */
 async function requestGemini(prompt, options = {}) {
   try {
     const { temperature = 0.7, imagePath, imageUrl, imageBase64 } = options;
-    
+
     // Build the content array - can include text and/or image
     const content = [];
-    
+
     // Add text prompt if provided
     if (prompt) {
       content.push({ type: 'text', text: prompt });
     }
-    
+
     // Handle image input - prioritize imagePath, then imageUrl, then imageBase64
     let imageDataUrl = null;
-    
+
     if (imagePath) {
       // Convert local file to base64
       imageDataUrl = await imageToBase64(imagePath);
@@ -41,7 +41,7 @@ async function requestGemini(prompt, options = {}) {
       imageDataUrl = imageBase64;
       console.log('✓ Using provided base64 image data');
     }
-    
+
     // Add image to content if provided
     if (imageDataUrl) {
       content.push({
@@ -51,19 +51,21 @@ async function requestGemini(prompt, options = {}) {
         },
       });
     }
-    
+
     // If no content at all, throw error
     if (content.length === 0) {
       throw new Error('Either prompt or image must be provided');
     }
-    
+
     console.log('Sending request to Gemini 2.0 Flash...');
     if (imageDataUrl) {
       console.log('  (with image)');
+      console.log(`  Image Payload Length: ${imageDataUrl.length} chars`);
     }
-    
+
+    console.time('Gemini API Call');
     const response = await openRouter.chat.send({
-      model: 'google/gemini-2.0-flash-exp',
+      model: 'google/gemini-2.5-flash',
       messages: [
         {
           role: 'user',
@@ -72,16 +74,28 @@ async function requestGemini(prompt, options = {}) {
       ],
       temperature: temperature,
     });
+    console.timeEnd('Gemini API Call');
 
     // Extract the response text
     const responseText = response.choices?.[0]?.message?.content || '';
-    
+
     if (!responseText) {
       throw new Error('No content in response from Gemini');
     }
-    
+
     console.log('Response received successfully');
-    return responseText;
+
+    // Parse JSON response
+    try {
+      // Clean up potential markdown formatting (```json ... ```)
+      const cleanText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+      const parsedResponse = JSON.parse(cleanText);
+      return parsedResponse;
+    } catch (parseError) {
+      console.error('Failed to parse LLM response as JSON:', parseError);
+      console.error('Raw response:', responseText);
+      throw new Error('Received invalid JSON from LLM');
+    }
   } catch (error) {
     console.error('Error making request to Gemini:', error);
     throw error;
@@ -92,11 +106,17 @@ async function requestGemini(prompt, options = {}) {
  * Processes an image and optional description through the LLM
  * @param {Object} file - Multer file object
  * @param {string|null} description - Optional description
- * @returns {Promise<string>} - LLM response text
+ * @returns {Promise<Object>} - LLM response object
  */
 export async function analyzeImageWithLLM(file, description = null) {
   const prompt = buildRecyclingPrompt(description);
-  const base64Image = bufferToBase64(file.buffer, file.mimetype);
+
+  // Process and optimize image
+  // This handles resizing and converting to JPEG, which solves:
+  // 1. HEIC compatibility
+  // 2. Large payload sizes
+  console.log(`Original MIME type: ${file.mimetype}`);
+  const base64Image = await processImage(file.buffer);
 
   const response = await requestGemini(prompt, {
     imageBase64: base64Image,
