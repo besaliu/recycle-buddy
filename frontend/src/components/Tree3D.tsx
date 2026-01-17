@@ -66,9 +66,11 @@ export function Tree3D() {
       <OrbitControls
         enableZoom={true}
         enableRotate={true}
-        enablePan={false}
+        enablePan={true}
         minDistance={1.5}
         maxDistance={10}
+        minPolarAngle={0}
+        maxPolarAngle={Math.PI / 2}
       />
 
       {/* All three trees positioned in a row with Suspense for loading */}

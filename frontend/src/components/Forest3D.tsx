@@ -10,6 +10,9 @@ import tree2Model from "../assets/tree2.glb";
 // @ts-ignore
 import tree3Model from "../assets/tree3.glb";
 
+// Ground level constant - easily changeable
+const GROUND_LEVEL = 0;
+
 interface Forest3DProps {
     count: number;
     areaSize?: number;
@@ -76,15 +79,15 @@ function ForestScene({ count, areaSize = 25 }: Forest3DProps) {
     }, [forestData]);
 
     return (
-        <group position={[0, -1, 0]}>
+        <group position={[0, GROUND_LEVEL, 0]}>
             <BakedInstances modelPath={tree1Model} data={dataByType[0]} />
             <BakedInstances modelPath={tree2Model} data={dataByType[1]} />
             <BakedInstances modelPath={tree3Model} data={dataByType[2]} />
 
-            {/* Ground */}
+            {/* Ground - double-sided so it's visible from below */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
                 <circleGeometry args={[areaSize / 1.5, 32]} />
-                <meshStandardMaterial color="#4ade80" transparent opacity={0.2} />
+                <meshStandardMaterial color="#4ade80" transparent opacity={1} side={THREE.DoubleSide} />
             </mesh>
         </group>
     );
