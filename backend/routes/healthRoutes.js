@@ -25,8 +25,8 @@ router.get('/', (req, res) => {
     endpoints: {
       health: 'GET /api/health',
       callLLM: 'POST /api/callLLM',
-      incrementTreeCount: 'POST /api/incrementTreeCount',
-      getTreeCount: 'GET /api/getTreeCount',
+      incrementGlobalTreeCount: 'POST /api/incrementGlobalTreeCount',
+      getGlobalTreeCount: 'GET /api/getGlobalTreeCount',
     },
     callLLM: {
       method: 'POST',

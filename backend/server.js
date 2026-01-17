@@ -26,6 +26,6 @@ app.listen(PORT, () => {
   console.log(`   Health check: http://localhost:${PORT}/api/health`);
   console.log(`   LLM endpoint: POST http://localhost:${PORT}/api/callLLM`);
   console.log(`   Firebase endpoints:`);
-  console.log(`     GET  http://localhost:${PORT}/api/getTreeCount`);
-  console.log(`     POST http://localhost:${PORT}/api/incrementTreeCount\n`);
+  console.log(`     GET  http://localhost:${PORT}/api/getGlobalTreeCount`);
+  console.log(`     POST http://localhost:${PORT}/api/incrementGlobalTreeCount\n`);
 });
