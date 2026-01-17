@@ -1,72 +1,12 @@
 import express from 'express';
 import admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import dotenv from 'dotenv';
 import { randomUUID } from 'crypto';
+import { db } from '../config/firebase.js';
 
 const router = express.Router();
 
-// Get the directory of the current module (for ES modules)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: join(__dirname, '..', '.env') });
-
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  try {
-    // Get project ID from .firebaserc or environment variable
-    let projectId = process.env.FIREBASE_PROJECT_ID;
-    
-    if (!projectId) {
-      try {
-        const firebasercPath = join(__dirname, '..', '.firebaserc');
-        const firebaserc = JSON.parse(readFileSync(firebasercPath, 'utf8'));
-        projectId = firebaserc.projects?.default || firebaserc.projects?.default;
-      } catch (e) {
-        // .firebaserc not found, will use environment variable or default
-      }
-    }
-
-    // Try to initialize with service account if provided
-    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-
-    if (serviceAccountPath) {
-      const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: projectId || serviceAccount.project_id,
-      });
-      console.log('✓ Firebase Admin initialized with service account file');
-    } else if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: projectId || serviceAccount.project_id,
-      });
-      console.log('✓ Firebase Admin initialized with service account JSON from env');
-    } else {
-      // Initialize with project ID (will use Application Default Credentials)
-      admin.initializeApp({
-        projectId: projectId || 'recycle-buddy-e82ea',
-      });
-      console.log(`✓ Firebase Admin initialized with project ID: ${projectId || 'recycle-buddy-e82ea'}`);
-    }
-  } catch (error) {
-    console.warn('⚠ Firebase Admin initialization failed:', error.message);
-    console.warn('   Firebase endpoints will not work until Firebase is properly configured.');
-    console.warn('   Options:');
-    console.warn('   1. Set FIREBASE_SERVICE_ACCOUNT_PATH to your service account key file, OR');
-    console.warn('   2. Set FIREBASE_SERVICE_ACCOUNT_JSON to your service account JSON, OR');
-    console.warn('   3. Use Application Default Credentials (gcloud auth application-default login)');
-  }
-}
-
-const db = admin.apps.length > 0 ? admin.firestore() : null;
+// FieldValue is used for atomic operations
+const { FieldValue } = admin.firestore;
 
 /**
  * POST /api/incrementGlobalTreeCount
@@ -94,7 +34,7 @@ router.post('/incrementGlobalTreeCount', async (req, res) => {
       const currentCount = sfDoc.data().globalTreeCount || 0;
       const updatedCount = currentCount + 1;
       transaction.update(globalTreeCounterRef, {
-        globalTreeCount: admin.firestore.FieldValue.increment(1)
+        globalTreeCount: FieldValue.increment(1)
       });
       return updatedCount;
     });
@@ -181,7 +121,7 @@ router.post('/incrementGlobalItemsScanned', async (req, res) => {
       const currentCount = doc.data().globalItemsScanned || 0;
       const updatedCount = currentCount + incrementAmount;
       transaction.update(globalTotalsRef, {
-        globalItemsScanned: admin.firestore.FieldValue.increment(incrementAmount)
+        globalItemsScanned: FieldValue.increment(incrementAmount)
       });
       return updatedCount;
     });
@@ -276,7 +216,7 @@ router.post('/incrementGlobalCO2Saved', async (req, res) => {
       const currentAmount = doc.data().globalCO2Saved || 0;
       const updatedAmount = currentAmount + amount;
       transaction.update(globalTotalsRef, {
-        globalCO2Saved: admin.firestore.FieldValue.increment(amount)
+        globalCO2Saved: FieldValue.increment(amount)
       });
       return updatedAmount;
     });
@@ -363,7 +303,7 @@ router.post('/incrementGlobalUserCount', async (req, res) => {
       const currentCount = doc.data().globalUserCount || 0;
       const updatedCount = currentCount + incrementAmount;
       transaction.update(globalTotalsRef, {
-        globalUserCount: admin.firestore.FieldValue.increment(incrementAmount)
+        globalUserCount: FieldValue.increment(incrementAmount)
       });
       return updatedCount;
     });
@@ -476,7 +416,7 @@ router.post('/createUser', async (req, res) => {
         totalItemsScannedByUser: 0,
         totalCO2SavedByUser: 0,
         individualTrees: 0,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       });
 
       // Increment global user count
@@ -582,7 +522,7 @@ router.post('/incrementUserItemsScanned/:userId', async (req, res) => {
       const currentCount = doc.data().totalItemsScannedByUser || 0;
       const updatedCount = currentCount + incrementAmount;
       transaction.update(userProfileRef, {
-        totalItemsScannedByUser: admin.firestore.FieldValue.increment(incrementAmount)
+        totalItemsScannedByUser: FieldValue.increment(incrementAmount)
       });
       return updatedCount;
     });
@@ -677,7 +617,7 @@ router.post('/incrementIndividualTrees/:userId', async (req, res) => {
       const currentCount = doc.data().individualTrees || 0;
       const updatedCount = currentCount + incrementAmount;
       transaction.update(userProfileRef, {
-        individualTrees: admin.firestore.FieldValue.increment(incrementAmount)
+        individualTrees: FieldValue.increment(incrementAmount)
       });
       return updatedCount;
     });
@@ -742,3 +682,4 @@ router.get('/getIndividualTrees/:userId', async (req, res) => {
 });
 
 export default router;
+ 

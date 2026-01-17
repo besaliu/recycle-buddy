@@ -9,18 +9,26 @@ Backend service using OpenRouter SDK to interact with Gemini 2.0 Flash model. Bu
 npm install
 ```
 
-2. Create a `.env` file in the backend directory:
+2. Create a `.env` file in the backend directory with your configuration:
 ```bash
-cp .env.example .env
-```
-
-3. Add your OpenRouter API key to the `.env` file:
-```
+# OpenRouter Configuration
 OPENROUTER_API_KEY=your_actual_api_key_here
+
+# Server Configuration
 PORT=3000
+
+# Firebase Configuration (choose one method)
+# For local development:
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
 ```
 
-**Note:** You can also create a `.env.example` file manually with the above content as a template.
+3. **Set up Firebase:**
+   - See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed instructions
+   - **Quick setup for local development:**
+     1. Get your Firebase service account key from [Firebase Console](https://console.firebase.google.com/)
+     2. Save it as `serviceAccountKey.json` in the `backend/` directory
+     3. Add `FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json` to your `.env` file
+   - Firebase will automatically initialize when you start the server - no manual initialization needed!
 
 ## Usage
 
@@ -124,6 +132,17 @@ Health check endpoint.
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
+
+#### Firebase Endpoints
+
+The API includes comprehensive Firebase endpoints for:
+- Global statistics (items scanned, CO2 saved, user count, tree count)
+- User management (create, get, update user profiles)
+- User-specific statistics (items scanned, individual trees)
+
+See the route handlers in `routes/firebaseRoutes.js` for all available endpoints.
+
+**Note:** Firebase automatically initializes on server start. See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for setup instructions.
 
 ### Using the Functions Directly
 
