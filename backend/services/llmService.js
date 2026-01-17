@@ -11,7 +11,7 @@ import { buildRecyclingPrompt } from './promptService.js';
  * @param {string} options.imagePath - Path to an image file to include (local file path)
  * @param {string} options.imageUrl - URL to an image to include (public URL)
  * @param {string} options.imageBase64 - Base64-encoded image data (data:image/...;base64,...)
- * @returns {Promise<string>} - The response from the model
+ * @returns {Promise<Object>} - The response from the model
  */
 async function requestGemini(prompt, options = {}) {
   try {
@@ -84,7 +84,18 @@ async function requestGemini(prompt, options = {}) {
     }
 
     console.log('Response received successfully');
-    return responseText;
+
+    // Parse JSON response
+    try {
+      // Clean up potential markdown formatting (```json ... ```)
+      const cleanText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+      const parsedResponse = JSON.parse(cleanText);
+      return parsedResponse;
+    } catch (parseError) {
+      console.error('Failed to parse LLM response as JSON:', parseError);
+      console.error('Raw response:', responseText);
+      throw new Error('Received invalid JSON from LLM');
+    }
   } catch (error) {
     console.error('Error making request to Gemini:', error);
     throw error;
@@ -95,7 +106,7 @@ async function requestGemini(prompt, options = {}) {
  * Processes an image and optional description through the LLM
  * @param {Object} file - Multer file object
  * @param {string|null} description - Optional description
- * @returns {Promise<string>} - LLM response text
+ * @returns {Promise<Object>} - LLM response object
  */
 export async function analyzeImageWithLLM(file, description = null) {
   const prompt = buildRecyclingPrompt(description);
