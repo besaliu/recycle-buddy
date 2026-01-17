@@ -60,6 +60,10 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 15 }}
+            onAnimationComplete={() => {
+              // Trigger resize to fix 3D canvas rendering issue
+              window.dispatchEvent(new Event("resize"));
+            }}
             className={styles.treeContainer}
           >
             <div className={styles.tree3DContainer}>
@@ -156,13 +160,12 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
                 >
                   {/* Rank Badge */}
                   <div
-                    className={`${styles.rankBadge} ${
-                      index === 0
+                    className={`${styles.rankBadge} ${index === 0
                         ? styles.gold
                         : index === 1
-                        ? styles.silver
-                        : styles.bronze
-                    }`}
+                          ? styles.silver
+                          : styles.bronze
+                      }`}
                   >
                     #{index + 1}
                   </div>
