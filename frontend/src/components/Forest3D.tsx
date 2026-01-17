@@ -39,7 +39,7 @@ export function Forest3D({ count, areaSize = 30 }: Forest3DProps) {
                 enableZoom={true}
                 enableRotate={true}
                 minDistance={2}
-                maxDistance={20}
+                maxDistance={30}
                 maxPolarAngle={Math.PI / 2.1} // Prevent going under the ground
             />
 
@@ -57,8 +57,9 @@ function ForestScene({ count, areaSize = 25 }: Forest3DProps) {
         const data = [];
 
         for (let i = 0; i < count; i++) {
-            // Tighter distribution: Reduce radius by ~25% (was / 2.5, now / 3.3) -> Increased by 10% (now / 3)
-            const r = prng.range(0, areaSize / 3);
+            // Place trees across the full ground area (ground radius is areaSize / 1.5, so use slightly less for margin)
+            const maxRadius = (areaSize / 1.5) * 0.9; // 90% of ground radius to keep trees within bounds
+            const r = prng.range(0, maxRadius);
             const theta = prng.range(0, Math.PI * 2);
 
             const x = (r * Math.cos(theta)) + prng.range(-0.5, 0.5);
