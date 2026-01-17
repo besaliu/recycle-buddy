@@ -3,10 +3,11 @@ import { Recycle, Scan, TreeDeciduous } from "lucide-react";
 import styles from "./Welcome.module.css";
 
 interface WelcomeProps {
+  username: string;
   onNavigate: (page: string) => void;
 }
 
-export function Welcome({ onNavigate }: WelcomeProps) {
+export function Welcome({ username, onNavigate }: WelcomeProps) {
   return (
     <div className={styles.container}>
       {/* Logo/Icon */}
@@ -37,6 +38,16 @@ export function Welcome({ onNavigate }: WelcomeProps) {
       >
         Recycle Buddy
       </motion.h1>
+
+      {/* Welcome Message */}
+      <motion.p
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
+        className={styles.welcomeText}
+      >
+        Welcome, {username}!
+      </motion.p>
 
       {/* Action Buttons */}
       <div className={styles.buttonContainer}>

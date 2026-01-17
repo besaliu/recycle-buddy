@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Background } from "./components/Background";
+import { UsernameEntry } from "./pages/UsernameEntry";
 import { Welcome } from "./pages/Welcome";
 import { ScanTrash } from "./pages/Scan";
 import { CommunityTree } from "./pages/Community";
 import "./App.css";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<"welcome" | "scan" | "community">("welcome");
+  const [username, setUsername] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<"username" | "welcome" | "scan" | "community">("username");
+
+  const handleUsernameSubmit = (name: string) => {
+    setUsername(name);
+    setCurrentPage("welcome");
+  };
 
   return (
     <div style={{
@@ -20,7 +27,20 @@ export default function App() {
       <Background />
 
       <AnimatePresence mode="wait">
-        {currentPage === "welcome" && (
+        {currentPage === "username" && (
+          <motion.div
+            key="username"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <UsernameEntry onSubmit={handleUsernameSubmit} />
+          </motion.div>
+        )}
+
+        {currentPage === "welcome" && username && (
           <motion.div
             key="welcome"
             initial={{ opacity: 0, x: -20 }}
@@ -29,11 +49,11 @@ export default function App() {
             transition={{ duration: 0.3 }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <Welcome onNavigate={setCurrentPage} />
+            <Welcome username={username} onNavigate={setCurrentPage} />
           </motion.div>
         )}
 
-        {currentPage === "scan" && (
+        {currentPage === "scan" && username && (
           <motion.div
             key="scan"
             initial={{ opacity: 0, x: 20 }}
@@ -42,7 +62,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <ScanTrash onBack={() => setCurrentPage("welcome")} />
+            <ScanTrash username={username} onBack={() => setCurrentPage("welcome")} onNavigate={setCurrentPage} />
           </motion.div>
         )}
 
