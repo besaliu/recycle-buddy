@@ -27,6 +27,7 @@ router.post('/callLLM', upload.single('image'), async (req, res) => {
     // Log request details
     console.log(`\n📸 LLM Request received:`);
     console.log(`   - Filename: ${req.file.originalname}`);
+    console.log(`   - MimeType: ${req.file.mimetype}`);
     console.log(`   - Size: ${(req.file.size / 1024).toFixed(2)} KB`);
     if (description) {
       console.log(`   - Description: ${description}`);
