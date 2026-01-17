@@ -55,7 +55,7 @@ export default function App() {
           </motion.div>
         )}
 
-        {currentPage === "scan" && username && (
+        {currentPage === "scan" && username && userId && (
           <motion.div
             key="scan"
             initial={{ opacity: 0, x: 20 }}
@@ -64,11 +64,11 @@ export default function App() {
             transition={{ duration: 0.3 }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <ScanTrash username={username} onBack={() => setCurrentPage("welcome")} onNavigate={setCurrentPage} />
+            <ScanTrash username={username} userId={userId} onBack={() => setCurrentPage("welcome")} onNavigate={setCurrentPage} />
           </motion.div>
         )}
 
-        {currentPage === "community" && (
+        {currentPage === "community" && userId && (
           <motion.div
             key="community"
             initial={{ opacity: 0, x: 20 }}
@@ -77,7 +77,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <CommunityTree onBack={() => setCurrentPage("welcome")} />
+            <CommunityTree userId={userId} onBack={() => setCurrentPage("welcome")} />
           </motion.div>
         )}
       </AnimatePresence>

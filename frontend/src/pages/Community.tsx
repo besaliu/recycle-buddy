@@ -2,43 +2,68 @@ import { motion } from "motion/react";
 import { ArrowLeft, TreeDeciduous, Users, Award, Leaf } from "lucide-react";
 import styles from "./Community.module.css";
 import { Forest3D } from "../components/Forest3D";
-import { statsService } from "../services/statsService";
 import { useState, useEffect } from "react";
+import {
+  getGlobalItemsScanned,
+  getGlobalUserCount,
+  getIndividualTrees,
+  getGlobalCO2Saved,
+  getTopUsers,
+} from "../services/api";
+import type { TopUser } from "../services/api";
 
 interface CommunityTreeProps {
+  userId: string;
   onBack: () => void;
 }
 
-export function CommunityTree({ onBack }: CommunityTreeProps) {
-  // Mock data for community stats
+export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
   const [stats, setStats] = useState({
-    totalItems: 1247,
-    contributors: 89,
-    treesPlanted: 0, // Will be fetched
-    co2Saved: 340,
+    totalItems: 0,
+    contributors: 0,
+    treesPlanted: 0,
+    co2Saved: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [topContributors, setTopContributors] = useState<TopUser[]>([]);
+  const [growthPercentage, setGrowthPercentage] = useState(0);
 
   // Fetch stats on mount
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await statsService.getCommunityStats();
-        setStats(prev => ({ ...prev, treesPlanted: data.treesPlanted }));
+        const [items, users, treesValue, co2, topUsers] = await Promise.all([
+          getGlobalItemsScanned(),
+          getGlobalUserCount(),
+          getIndividualTrees(userId),
+          getGlobalCO2Saved(),
+          getTopUsers(),
+        ]);
+
+        // Extract whole number for tree count
+        const treesPlanted = Math.floor(treesValue);
+        
+        // Extract decimal part for growth percentage (0-100)
+        const decimalPart = treesValue - treesPlanted;
+        const percentage = Math.round(decimalPart * 100);
+
+        setStats({
+          totalItems: items,
+          contributors: users,
+          treesPlanted: treesPlanted,
+          co2Saved: Math.round(co2), // Round to nearest integer
+        });
+
+        setGrowthPercentage(percentage);
+        setTopContributors(topUsers);
       } catch (error) {
         console.error("Failed to fetch community stats:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchStats();
-  }, []);
-
-  // Tree growth percentage (0-100)
-  const growthPercentage = 67; // This would be calculated based on community goals
-
-  const topContributors = [
-    { name: "EcoWarrior", items: 156, avatar: "🌟" },
-    { name: "GreenThumb", items: 143, avatar: "🌱" },
-    { name: "RecyclePro", items: 128, avatar: "♻️" },
-  ];
+  }, [userId]);
 
   return (
     <div className={styles.container}>
@@ -67,7 +92,7 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
             transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 15 }}
             className={styles.title}
           >
-            Community Tree
+            Community Forest
           </motion.h2>
 
           {/* 3D Trees */}
@@ -102,101 +127,107 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
               />
             </div>
             <p className={styles.progressText}>
-              Next tree at 100%! 🌳
+              Next tree at 100%!
+              <TreeDeciduous className={styles.progressIcon} strokeWidth={3} aria-hidden="true" />
             </p>
           </motion.div>
 
-          {/* Stats Cards - Compact 2x2 Grid */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.4 }}
-            className={styles.statsGrid}
-          >
-            {/* Total Items Recycled */}
-            <div className={`${styles.statCard} ${styles.items}`}>
-              <div className={styles.statHeader}>
-                <Leaf strokeWidth={3} />
-                <span className={styles.statLabel}>Items</span>
+          {/* Scrollable Stats and Contributors Section */}
+          <div className={styles.scrollableSection}>
+            {/* Stats Cards - Compact 2x2 Grid */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
+              className={styles.statsGrid}
+            >
+              {/* Total Items Recycled */}
+              <div className={`${styles.statCard} ${styles.items}`}>
+                <div className={styles.statHeader}>
+                  <Leaf strokeWidth={3} />
+                  <span className={styles.statLabel}>Items</span>
+                </div>
+                <p className={styles.statValue}>{stats.totalItems}</p>
               </div>
-              <p className={styles.statValue}>{stats.totalItems}</p>
-            </div>
 
-            {/* Contributors */}
-            <div className={`${styles.statCard} ${styles.people}`}>
-              <div className={styles.statHeader}>
-                <Users strokeWidth={3} />
-                <span className={styles.statLabel}>People</span>
+              {/* Contributors */}
+              <div className={`${styles.statCard} ${styles.people}`}>
+                <div className={styles.statHeader}>
+                  <Users strokeWidth={3} />
+                  <span className={styles.statLabel}>People</span>
+                </div>
+                <p className={styles.statValue}>{stats.contributors}</p>
               </div>
-              <p className={styles.statValue}>{stats.contributors}</p>
-            </div>
 
-            {/* Trees Planted */}
-            <div className={`${styles.statCard} ${styles.trees}`}>
-              <div className={styles.statHeader}>
-                <TreeDeciduous strokeWidth={3} />
-                <span className={styles.statLabel}>Trees</span>
+              {/* Trees Planted */}
+              <div className={`${styles.statCard} ${styles.trees}`}>
+                <div className={styles.statHeader}>
+                  <TreeDeciduous strokeWidth={3} />
+                  <span className={styles.statLabel}>Trees</span>
+                </div>
+                <p className={styles.statValue}>{stats.treesPlanted}</p>
               </div>
-              <p className={styles.statValue}>{stats.treesPlanted}</p>
-            </div>
 
-            {/* CO2 Saved */}
-            <div className={`${styles.statCard} ${styles.co2}`}>
-              <div className={styles.statHeader}>
-                <span style={{ fontSize: '0.75rem' }}>☁️</span>
-                <span className={styles.statLabel}>CO₂</span>
+              {/* CO2 Saved */}
+              <div className={`${styles.statCard} ${styles.co2}`}>
+                <div className={styles.statHeader}>
+                  <span style={{ fontSize: '0.75rem' }}>☁️</span>
+                  <span className={styles.statLabel}>CO₂</span>
+                </div>
+                <p className={`${styles.statValue} ${styles.small}`}>
+                  {stats.co2Saved} lbs
+                </p>
               </div>
-              <p className={`${styles.statValue} ${styles.small}`}>
-                {stats.co2Saved}kg
-              </p>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* Top Contributors - Compact */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.4 }}
-            className={styles.contributorsSection}
-          >
-            <div className={styles.contributorsHeader}>
-              <Award strokeWidth={3} />
-              <h3 className={styles.contributorsTitle}>Top Contributors</h3>
-            </div>
+            {/* Top Contributors - Compact */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.4 }}
+              className={styles.contributorsSection}
+            >
+              <div className={styles.contributorsHeader}>
+                <Award strokeWidth={3} />
+                <h3 className={styles.contributorsTitle}>Top Contributors</h3>
+              </div>
 
-            <div className={styles.contributorsList}>
-              {topContributors.map((contributor, index) => (
-                <motion.div
-                  key={contributor.name}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.8 + index * 0.1, duration: 0.3 }}
-                  className={styles.contributorCard}
-                >
-                  {/* Rank Badge */}
-                  <div
-                    className={`${styles.rankBadge} ${index === 0
-                      ? styles.gold
-                      : index === 1
-                        ? styles.silver
-                        : styles.bronze
-                      }`}
+              <div className={styles.contributorsList}>
+                {topContributors.map((contributor, index) => (
+                  <motion.div
+                    key={contributor.UUID}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1, duration: 0.3 }}
+                    className={styles.contributorCard}
                   >
-                    #{index + 1}
-                  </div>
+                    {/* Rank Badge */}
+                    <div
+                      className={`${styles.rankBadge} ${index === 0
+                        ? styles.gold
+                        : index === 1
+                          ? styles.silver
+                          : styles.bronze
+                        }`}
+                    >
+                      #{index + 1}
+                    </div>
 
-                  {/* Avatar */}
-                  <div className={styles.avatar}>{contributor.avatar}</div>
+                    {/* Avatar */}
+                    <div className={styles.avatar}>
+                      {index === 0 ? "🌟" : index === 1 ? "🌱" : "♻️"}
+                    </div>
 
-                  {/* Info */}
-                  <div className={styles.contributorInfo}>
-                    <p className={styles.contributorName}>{contributor.name}</p>
-                    <p className={styles.contributorItems}>{contributor.items} items</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                    {/* Info */}
+                    <div className={styles.contributorInfo}>
+                      <p className={styles.contributorName}>{contributor.username}</p>
+                      <p className={styles.contributorItems}>{contributor.totalItemsScannedByUser} items</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>

@@ -2,10 +2,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { Camera, ArrowLeft, Type, Send, X, Recycle, AlertTriangle, Sprout, TreeDeciduous, Trash2, Cloud, TrendingUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import styles from "./Scan.module.css";
-import { analyzeImage } from "../services/api";
+import { analyzeImage, incrementGlobalCO2Saved, incrementGlobalItemsScanned, incrementIndividualTrees } from "../services/api";
 
 interface ScanTrashProps {
   username: string;
+  userId: string;
   onBack: () => void;
   onNavigate: (page: string) => void;
 }
@@ -22,7 +23,7 @@ interface ScanResult {
   notes: string;
 }
 
-export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
+export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashProps) {
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
@@ -82,6 +83,27 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
       };
 
       setScanResult(result);
+
+      // Update global stats
+      try {
+        // Parse CO2 saved value (e.g., "0.5 lbs" -> 0.5)
+        const co2Value = parseFloat(result.co2Saved.replace(/[^\d.-]/g, ''));
+        if (!isNaN(co2Value)) {
+          await incrementGlobalCO2Saved(co2Value);
+        }
+        
+        // Increment global items scanned
+        await incrementGlobalItemsScanned(1);
+
+        // Parse recycle rate (e.g., "70%" -> 0.70)
+        const recycleRate = parseFloat(result.recyclableRate.replace(/[^\d.-]/g, '')) / 100;
+        if (!isNaN(recycleRate)) {
+          await incrementIndividualTrees(userId, recycleRate);
+        }
+      } catch (statsError) {
+        console.error("Error updating stats:", statsError);
+        // Don't show error to user, stats update is not critical
+      }
     } catch (err) {
       console.error("Error analyzing image:", err);
       setError(err instanceof Error ? err.message : "Failed to analyze image");
@@ -91,7 +113,7 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
   };
 
   // DEV ONLY: Mock submit with fake data
-  const handleDevSubmit = () => {
+  const handleDevSubmit = async () => {
     if (!image) {
       setError("No image selected");
       return;
@@ -101,7 +123,7 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
     setError(null);
 
     // Simulate API delay
-    setTimeout(() => {
+    setTimeout(async () => {
       const mockCategories: TrashCategory[] = ["recyclable", "compostable", "hazardous"];
       const category = mockCategories[Math.floor(Math.random() * mockCategories.length)];
 
@@ -132,6 +154,28 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
       };
 
       setScanResult(result);
+
+      // Update global stats
+      try {
+        // Parse CO2 saved value (e.g., "0.5 lbs" -> 0.5)
+        const co2Value = parseFloat(result.co2Saved.replace(/[^\d.-]/g, ''));
+        if (!isNaN(co2Value)) {
+          await incrementGlobalCO2Saved(co2Value);
+        }
+        
+        // Increment global items scanned
+        await incrementGlobalItemsScanned(1);
+
+        // Parse recycle rate (e.g., "70%" -> 0.70)
+        const recycleRate = parseFloat(result.recyclableRate.replace(/[^\d.-]/g, '')) / 100;
+        if (!isNaN(recycleRate)) {
+          await incrementIndividualTrees(userId, recycleRate);
+        }
+      } catch (statsError) {
+        console.error("Error updating stats:", statsError);
+        // Don't show error to user, stats update is not critical
+      }
+
       setIsLoading(false);
     }, 1000);
   };

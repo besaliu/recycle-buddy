@@ -51,8 +51,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding-bottom: 6rem;
+  padding-bottom: 1rem;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
 }
 
 .contentInner {
@@ -60,6 +62,10 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
 }
 
 .title {
@@ -77,16 +83,18 @@
   border: 4px solid #4ade80;
   text-shadow: 2px 2px 0 #15803d;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .treeContainer {
   position: relative;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 }
 
 .tree3DContainer {
   width: 100%;
-  height: 20rem;
+  height: 16rem;
   max-width: 25rem;
   border-radius: 1rem;
   overflow: hidden;
@@ -204,7 +212,8 @@
 .progressSection {
   width: 100%;
   max-width: 20rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 }
 
 .progressBar {
@@ -225,6 +234,10 @@
 
 .progressText {
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   font-size: 0.875rem;
   color: white;
   font-weight: bold;
@@ -232,19 +245,43 @@
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
 
-.statsGrid {
+.progressIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: white;
+}
+
+.scrollableSection {
   width: 100%;
   max-width: 20rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 10;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scrollableSection::-webkit-scrollbar {
+  display: none;
+}
+
+.statsGrid {
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
 }
 
 .statCard {
   border-radius: 0.75rem;
   padding: 0.75rem;
-  box-shadow: 0 4px 0 0 var(--shadow-color), 0 5px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .statCard.items {
@@ -301,7 +338,6 @@
 
 .contributorsSection {
   width: 100%;
-  max-width: 20rem;
 }
 
 .contributorsHeader {
@@ -337,7 +373,7 @@
   backdrop-filter: blur(4px);
   border-radius: 0.75rem;
   padding: 0.5rem;
-  box-shadow: 0 3px 0 0 #cbd5e1, 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -353,7 +389,7 @@
   font-weight: bold;
   color: white;
   font-size: 0.875rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .rankBadge.gold {
@@ -399,7 +435,7 @@
   }
 
   .contentContainer {
-    padding-bottom: 5rem;
+    padding-bottom: 6rem;
   }
 }
 

@@ -46,6 +46,12 @@ export interface ErrorResponse {
   error?: string;
 }
 
+export interface TopUser {
+  username: string;
+  totalItemsScannedByUser: number;
+  UUID: string;
+}
+
 // Cookie utilities
 export function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
@@ -118,4 +124,105 @@ export async function analyzeImage(imageFile: File, description?: string): Promi
   }
 
   return response.json();
+}
+
+// Stats API functions
+export async function incrementGlobalCO2Saved(amount: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/incrementGlobalCO2Saved`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to increment CO2 saved');
+  }
+}
+
+export async function incrementGlobalItemsScanned(amount: number = 1): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/incrementGlobalItemsScanned`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to increment items scanned');
+  }
+}
+
+export async function getGlobalItemsScanned(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getGlobalItemsScanned`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get global items scanned');
+  }
+
+  return data.globalItemsScanned;
+}
+
+export async function getGlobalUserCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getGlobalUserCount`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get global user count');
+  }
+
+  return data.globalUserCount;
+}
+
+export async function getIndividualTrees(userId: string): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getIndividualTrees/${userId}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get individual trees');
+  }
+
+  return data.individualTrees;
+}
+
+export async function getGlobalCO2Saved(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getGlobalCO2Saved`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get global CO2 saved');
+  }
+
+  return data.globalCO2Saved;
+}
+
+export async function getTopUsers(): Promise<TopUser[]> {
+  const response = await fetch(`${API_BASE_URL}/getTopUsers`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get top users');
+  }
+
+  return data.topUsers;
+}
+
+export async function incrementIndividualTrees(userId: string, amount: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/incrementIndividualTrees/${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to increment individual trees');
+  }
 }
