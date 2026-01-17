@@ -9,10 +9,12 @@ import "./App.css";
 
 export default function App() {
   const [username, setUsername] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<"username" | "welcome" | "scan" | "community">("username");
 
-  const handleUsernameSubmit = (name: string) => {
+  const handleUsernameSubmit = (name: string, id: string) => {
     setUsername(name);
+    setUserId(id);
     setCurrentPage("welcome");
   };
 

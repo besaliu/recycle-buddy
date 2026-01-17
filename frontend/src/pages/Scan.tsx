@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "motion/react";
-import { Camera, ArrowLeft, Type, Send, X, Recycle, AlertTriangle, Sprout, TreeDeciduous } from "lucide-react";
-import { useState, useRef } from "react";
+import { Camera, ArrowLeft, Type, Send, X, Recycle, AlertTriangle, Sprout, TreeDeciduous, Trash2, Cloud, TrendingUp } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import styles from "./Scan.module.css";
+import { analyzeImage } from "../services/api";
 
 interface ScanTrashProps {
   username: string;
@@ -13,21 +14,31 @@ type TrashCategory = "recyclable" | "compostable" | "hazardous";
 
 interface ScanResult {
   category: TrashCategory;
-  co2Saved: number;
-  recyclableRate: number;
+  itemName: string;
+  bin: string;
+  co2Saved: string;
+  recyclableRate: string;
+  reasoning: string;
   notes: string;
 }
 
 export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [showDescription, setShowDescription] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollThumbHeight, setScrollThumbHeight] = useState(0);
+  const [scrollThumbTop, setScrollThumbTop] = useState(0);
 
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -36,36 +47,141 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
     }
   };
 
-  const handleSubmit = () => {
-    // Mock classification logic - randomly assign category
-    const categories: TrashCategory[] = ["recyclable", "compostable", "hazardous"];
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    
-    // Generate mock stats based on category
-    const result: ScanResult = {
-      category,
-      co2Saved: category === "recyclable" ? Math.floor(Math.random() * 30 + 10) : 
-                category === "compostable" ? Math.floor(Math.random() * 20 + 5) :
-                Math.floor(Math.random() * 5),
-      recyclableRate: category === "recyclable" ? Math.floor(Math.random() * 30 + 70) :
-                      category === "compostable" ? Math.floor(Math.random() * 20 + 50) :
-                      Math.floor(Math.random() * 20 + 10),
-      notes: category === "recyclable" 
-        ? "Great job! This item can be recycled. Make sure it's clean and dry before placing it in the recycling bin."
-        : category === "compostable"
-        ? "Perfect for composting! This organic material will help enrich the soil and reduce landfill waste."
-        : "Caution! This item requires special disposal. Please take it to a hazardous waste facility."
-    };
+  const handleSubmit = async () => {
+    if (!imageFile) {
+      setError("No image file selected");
+      return;
+    }
 
-    setScanResult(result);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await analyzeImage(imageFile, description);
+      
+      // Map classification to our category type
+      let category: TrashCategory = "recyclable";
+      const classification = response.response.classification.toLowerCase();
+      
+      if (classification.includes("compost")) {
+        category = "compostable";
+      } else if (classification.includes("hazard")) {
+        category = "hazardous";
+      } else if (classification.includes("recycle")) {
+        category = "recyclable";
+      }
+
+      const result: ScanResult = {
+        category,
+        itemName: response.response.item_name,
+        bin: response.response.bin,
+        co2Saved: response.response.environmental_impact.co2_saved,
+        recyclableRate: response.response.environmental_impact.recycling_rate,
+        reasoning: response.response.reasoning,
+        notes: response.response.miscellaneous,
+      };
+
+      setScanResult(result);
+    } catch (err) {
+      console.error("Error analyzing image:", err);
+      setError(err instanceof Error ? err.message : "Failed to analyze image");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // DEV ONLY: Mock submit with fake data
+  const handleDevSubmit = () => {
+    if (!image) {
+      setError("No image selected");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    // Simulate API delay
+    setTimeout(() => {
+      const mockCategories: TrashCategory[] = ["recyclable", "compostable", "hazardous"];
+      const category = mockCategories[Math.floor(Math.random() * mockCategories.length)];
+
+      const result: ScanResult = {
+        category,
+        itemName: category === "recyclable" ? "Cardboard Soda Box" : 
+                  category === "compostable" ? "Banana Peel" : 
+                  "Used Battery",
+        bin: category === "recyclable" ? "blue bin" : 
+             category === "compostable" ? "green bin" : 
+             "hazardous waste facility",
+        co2Saved: category === "recyclable" ? "0.5 lbs" : 
+                  category === "compostable" ? "0.3 lbs" : 
+                  "0.1 lbs",
+        recyclableRate: category === "recyclable" ? "70%" : 
+                        category === "compostable" ? "85%" : 
+                        "15%",
+        reasoning: category === "recyclable" 
+          ? "The item is a cardboard box used for packaging soda cans. According to Santa Cruz guidelines, 'cardboard (unwaxed/flattened)' and 'cereal/cracker boxes' are recyclable in the blue bin. This box appears to be unwaxed."
+          : category === "compostable"
+          ? "This is organic waste that can be composted. Banana peels break down quickly and add valuable nutrients to compost. Make sure to remove any stickers before composting."
+          : "Batteries contain hazardous materials like lead, mercury, and lithium that can contaminate soil and water. They must be disposed of at a hazardous waste facility, not in regular trash or recycling.",
+        notes: category === "recyclable"
+          ? "Before recycling, flatten the cardboard box to save space in your blue bin and in the recycling truck! Cardboard can be recycled into new paper products like paperboard, tissue paper, and even new cardboard boxes."
+          : category === "compostable"
+          ? "Composting banana peels helps reduce methane emissions from landfills. They're rich in potassium and other nutrients that plants love. Your compost will be ready in 3-6 months!"
+          : "Many stores and recycling centers offer battery recycling programs. Check with your local waste management facility for drop-off locations. Never throw batteries in regular trash as they can cause fires.",
+      };
+
+      setScanResult(result);
+      setIsLoading(false);
+    }, 1000);
   };
 
   const handleReset = () => {
     setImage(null);
+    setImageFile(null);
     setDescription("");
     setShowDescription(false);
     setScanResult(null);
+    setError(null);
   };
+
+  const updateScrollbar = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const scrollableHeight = scrollHeight - clientHeight;
+    
+    // Only show scrollbar if content is scrollable
+    if (scrollableHeight <= 0) {
+      setScrollThumbHeight(0);
+      return;
+    }
+
+    // Calculate thumb height (proportional to visible area)
+    const thumbHeight = Math.max((clientHeight / scrollHeight) * clientHeight, 30);
+    setScrollThumbHeight(thumbHeight);
+
+    // Calculate thumb position
+    const scrollPercentage = scrollTop / scrollableHeight;
+    const maxThumbTop = clientHeight - thumbHeight;
+    setScrollThumbTop(scrollPercentage * maxThumbTop);
+  };
+
+  const handleScroll = () => {
+    updateScrollbar();
+  };
+
+  // Initialize scrollbar on scan result
+  useEffect(() => {
+    if (scanResult && scrollContainerRef.current) {
+      // Small delay to ensure content is rendered
+      setTimeout(updateScrollbar, 100);
+      // Also update on window resize
+      window.addEventListener('resize', updateScrollbar);
+      return () => window.removeEventListener('resize', updateScrollbar);
+    }
+  }, [scanResult]);
 
   // Category icon mapping
   const getCategoryIcon = (category: TrashCategory) => {
@@ -76,18 +192,6 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
         return Sprout;
       case "hazardous":
         return AlertTriangle;
-    }
-  };
-
-  // Category emoji mapping
-  const getCategoryEmoji = (category: TrashCategory) => {
-    switch (category) {
-      case "recyclable":
-        return "♻️";
-      case "compostable":
-        return "🌱";
-      case "hazardous":
-        return "⚠️";
     }
   };
 
@@ -156,7 +260,22 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
                     <img src={image} alt="Captured item" />
                   </div>
                   <button
-                    onClick={() => setImage(null)}
+                    onClick={() => {
+                      setImage(null);
+                      setImageFile(null);
+                      setError(null);
+                    }}
+                    className={styles.deleteButton}
+                  >
+                    <Trash2 strokeWidth={2.5} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setImage(null);
+                      setImageFile(null);
+                      setError(null);
+                      setTimeout(() => fileInputRef.current?.click(), 100);
+                    }}
                     className={styles.retakeButton}
                   >
                     Retake
@@ -222,20 +341,48 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
                 </motion.div>
               )}
 
+              {/* Error Message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={styles.errorMessage}
+                >
+                  {error}
+                </motion.div>
+              )}
+
               {/* Submit Button */}
               {image && (
-                <motion.button
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubmit}
-                  className={styles.submitButton}
-                >
-                  <Send strokeWidth={2.5} />
-                  <span>Submit Item</span>
-                </motion.button>
+                <>
+                  <motion.button
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                    className={`${styles.submitButton} ${isLoading ? styles.submitButtonLoading : ""}`}
+                  >
+                    <Send strokeWidth={2.5} />
+                    <span>{isLoading ? "Analyzing..." : "Submit Item"}</span>
+                  </motion.button>
+
+                  {/* DEV ONLY: Mock Submit Button */}
+                  <motion.button
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleDevSubmit}
+                    disabled={isLoading}
+                    className={`${styles.devButton} ${isLoading ? styles.submitButtonLoading : ""}`}
+                  >
+                    <span>🧪 Dev Test</span>
+                  </motion.button>
+                </>
               )}
             </motion.div>
           </motion.div>
@@ -256,20 +403,19 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
                 transition={{ delay: 0.1 }}
                 className={styles.successHeader}
               >
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-                  className={styles.categoryEmoji}
-                >
-                  {getCategoryEmoji(scanResult.category)}
-                </motion.div>
                 <h2 className={styles.successTitle}>
-                  Item Scanned! 🎉
+                  Item Scanned!
                 </h2>
-                <p className={styles.successSubtitle}>
-                  Great work, {username}!
-                </p>
+              </motion.div>
+
+              {/* Item Name */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.25 }}
+                className={styles.itemName}
+              >
+                {scanResult.itemName}
               </motion.div>
 
               {/* Category Badge */}
@@ -310,11 +456,13 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
                   className={styles.statCard}
                 >
                   <div className={styles.statHeader}>
-                    <span className={styles.statEmoji}>☁️</span>
+                    <div className={styles.statIconWrapper}>
+                      <Cloud strokeWidth={2.5} />
+                    </div>
                     <p className={styles.statLabel}>CO₂ Saved</p>
                   </div>
                   <p className={styles.statValue}>
-                    {scanResult.co2Saved}%
+                    {scanResult.co2Saved}
                   </p>
                 </motion.div>
 
@@ -326,28 +474,54 @@ export function ScanTrash({ username, onBack, onNavigate }: ScanTrashProps) {
                   className={styles.statCardGreen}
                 >
                   <div className={styles.statHeader}>
-                    <span className={styles.statEmoji}>📊</span>
+                    <div className={styles.statIconWrapper}>
+                      <TrendingUp strokeWidth={2.5} />
+                    </div>
                     <p className={styles.statLabel}>Recycle Rate</p>
                   </div>
                   <p className={styles.statValue}>
-                    {scanResult.recyclableRate}%
+                    {scanResult.recyclableRate}
                   </p>
                 </motion.div>
               </motion.div>
 
-              {/* Notes Section */}
+              {/* Combined Notes Section */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.7 }}
                 className={styles.notesSection}
               >
-                <div className={styles.notesHeader}>
-                  <h3 className={styles.notesTitle}>Misc. Notes</h3>
+                <div 
+                  ref={scrollContainerRef}
+                  onScroll={handleScroll}
+                  className={styles.notesScrollContainer}
+                >
+                  <div className={styles.notesBlock}>
+                    <h3 className={styles.notesTitle}>Why?</h3>
+                    <p className={styles.notesText}>
+                      {scanResult.reasoning}
+                    </p>
+                  </div>
+                  <div className={styles.notesBlock}>
+                    <h3 className={styles.notesTitle}>Misc. Notes</h3>
+                    <p className={styles.notesText}>
+                      {scanResult.notes}
+                    </p>
+                  </div>
                 </div>
-                <p className={styles.notesText}>
-                  {scanResult.notes}
-                </p>
+                {/* Custom scrollbar indicator - always visible */}
+                <div className={styles.customScrollbar}>
+                  {scrollThumbHeight > 0 && (
+                    <div 
+                      className={styles.customScrollbarThumb}
+                      style={{
+                        height: `${scrollThumbHeight}px`,
+                        transform: `translateY(${scrollThumbTop}px)`
+                      }}
+                    />
+                  )}
+                </div>
               </motion.div>
 
               {/* Action Buttons */}

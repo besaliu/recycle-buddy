@@ -81,11 +81,12 @@
 }
 
 .ground {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 20;
+  width: 100%;
 }
 
 .groundLayers {
@@ -234,17 +235,17 @@
   }
 
   .grassBack {
-    height: 5rem;
+    height: 6rem;
   }
 
   .grassMiddle {
-    height: 4rem;
-    margin-top: -3rem;
+    height: 5rem;
+    margin-top: -4rem;
   }
 
   .grassFront {
-    height: 3rem;
-    margin-top: -2rem;
+    height: 4rem;
+    margin-top: -3rem;
   }
 }
 
