@@ -1,7 +1,9 @@
 import { motion } from "motion/react";
 import { ArrowLeft, TreeDeciduous, Users, Award, Leaf } from "lucide-react";
 import styles from "./Community.module.css";
-import { Tree3D } from "../components/Tree3D";
+import { Forest3D } from "../components/Forest3D";
+import { statsService } from "../services/statsService";
+import { useState, useEffect } from "react";
 
 interface CommunityTreeProps {
   onBack: () => void;
@@ -9,12 +11,25 @@ interface CommunityTreeProps {
 
 export function CommunityTree({ onBack }: CommunityTreeProps) {
   // Mock data for community stats
-  const stats = {
+  const [stats, setStats] = useState({
     totalItems: 1247,
     contributors: 89,
-    treesPlanted: 12,
+    treesPlanted: 0, // Will be fetched
     co2Saved: 340,
-  };
+  });
+
+  // Fetch stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await statsService.getCommunityStats();
+        setStats(prev => ({ ...prev, treesPlanted: data.treesPlanted }));
+      } catch (error) {
+        console.error("Failed to fetch community stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Tree growth percentage (0-100)
   const growthPercentage = 67; // This would be calculated based on community goals
@@ -67,7 +82,7 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
             className={styles.treeContainer}
           >
             <div className={styles.tree3DContainer}>
-              <Tree3D />
+              <Forest3D count={stats.treesPlanted} />
             </div>
           </motion.div>
 
@@ -161,10 +176,10 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
                   {/* Rank Badge */}
                   <div
                     className={`${styles.rankBadge} ${index === 0
-                        ? styles.gold
-                        : index === 1
-                          ? styles.silver
-                          : styles.bronze
+                      ? styles.gold
+                      : index === 1
+                        ? styles.silver
+                        : styles.bronze
                       }`}
                   >
                     #{index + 1}
