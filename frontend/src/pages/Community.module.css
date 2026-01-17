@@ -84,6 +84,17 @@
   margin-bottom: 0.75rem;
 }
 
+.tree3DContainer {
+  width: 100%;
+  height: 20rem;
+  max-width: 25rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 .treeWrapper {
   position: relative;
   width: 10rem;

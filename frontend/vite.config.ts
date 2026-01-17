@@ -8,4 +8,5 @@ export default defineConfig({
     host: true, // Listen on all addresses
     port: 5173, // Optional: specify port (default is 5173)
   },
+  assetsInclude: ['**/*.glb', '**/*.gltf'],
 })

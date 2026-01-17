@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowLeft, TreeDeciduous, Users, Award, Leaf } from "lucide-react";
 import styles from "./Community.module.css";
+import { Tree3D } from "../components/Tree3D";
 
 interface CommunityTreeProps {
   onBack: () => void;
@@ -23,9 +24,6 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
     { name: "GreenThumb", items: 143, avatar: "🌱" },
     { name: "RecyclePro", items: 128, avatar: "♻️" },
   ];
-
-  // Calculate tree scale based on percentage (min 0.4, max 1.0)
-  const treeScale = 0.4 + (growthPercentage / 100) * 0.6;
 
   return (
     <div className={styles.container}>
@@ -57,79 +55,15 @@ export function CommunityTree({ onBack }: CommunityTreeProps) {
             Community Tree
           </motion.h2>
 
-          {/* Animated Tree with Growth */}
+          {/* 3D Trees */}
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 15 }}
             className={styles.treeContainer}
           >
-            {/* Tree Container */}
-            <div className={styles.treeWrapper}>
-              {/* Tree Crown - scales with growth */}
-              <motion.div
-                className={styles.treeCrown}
-                animate={{
-                  scale: [treeScale, treeScale * 1.05, treeScale],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <div className={styles.crownWrapper}>
-                  {/* Leaves - layered circles for cartoon look */}
-                  <div className={styles.leaf1} />
-                  <div className={styles.leaf2} />
-                  <div className={styles.leaf3} />
-                  <div className={styles.leaf4} />
-                  
-                  {/* Floating leaves */}
-                  <motion.div
-                    className={styles.floatingLeaf1}
-                    animate={{
-                      y: [0, -10, 0],
-                      rotate: [0, 10, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    🍃
-                  </motion.div>
-                  <motion.div
-                    className={styles.floatingLeaf2}
-                    animate={{
-                      y: [0, -8, 0],
-                      rotate: [0, -10, 0],
-                    }}
-                    transition={{
-                      duration: 2.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: 0.5,
-                    }}
-                  >
-                    🍃
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Tree Trunk - fixed size */}
-              <div className={styles.trunk} />
-              
-              {/* Growth Percentage Badge */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.8, type: "spring", stiffness: 300, damping: 20 }}
-                className={styles.growthBadge}
-              >
-                <span>{growthPercentage}%</span>
-              </motion.div>
+            <div className={styles.tree3DContainer}>
+              <Tree3D />
             </div>
           </motion.div>
 
