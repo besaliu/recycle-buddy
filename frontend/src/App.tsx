@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Background } from "./components/Background";
+import { Welcome } from "./pages/Welcome";
+import { ScanTrash } from "./pages/Scan";
+import { CommunityTree } from "./pages/Community";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<"welcome" | "scan" | "community">("welcome");
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div style={{
+      position: 'relative',
+      height: '100vh',
+      width: '100%',
+      overflow: 'hidden',
+      background: 'linear-gradient(to bottom, #7dd3fc, #38bdf8, #7dd3fc)'
+    }}>
+      <Background />
 
-export default App
+      <AnimatePresence mode="wait">
+        {currentPage === "welcome" && (
+          <motion.div
+            key="welcome"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <Welcome onNavigate={setCurrentPage} />
+          </motion.div>
+        )}
+
+        {currentPage === "scan" && (
+          <motion.div
+            key="scan"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <ScanTrash onBack={() => setCurrentPage("welcome")} />
+          </motion.div>
+        )}
+
+        {currentPage === "community" && (
+          <motion.div
+            key="community"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <CommunityTree onBack={() => setCurrentPage("welcome")} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

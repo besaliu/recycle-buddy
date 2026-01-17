@@ -1,0 +1,291 @@
+.skyBackground {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, #7dd3fc, #93c5fd, #a5f3fc);
+}
+
+.sun {
+  position: absolute;
+  top: 3rem;
+  right: 2rem;
+  filter: drop-shadow(0 4px 20px rgba(253, 224, 71, 0.4));
+}
+
+.sunImage {
+  width: 5.5rem;
+  height: 5.5rem;
+  display: block;
+}
+
+.cloud {
+  position: absolute;
+}
+
+.cloud1 {
+  top: 4rem;
+  left: 1rem;
+}
+
+.cloud2 {
+  top: 8rem;
+  right: 3rem;
+}
+
+.cloud3 {
+  top: 6rem;
+  left: 33.333%;
+}
+
+.cloudWrapper {
+  position: relative;
+}
+
+.cloudBubbles {
+  display: flex;
+  align-items: flex-end;
+}
+
+.cloudBubble1 {
+  width: 3rem;
+  height: 3rem;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+
+.cloudBubble2 {
+  width: 4rem;
+  height: 4rem;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #e0f2fe;
+  margin-left: -1.5rem;
+}
+
+.cloudBubble3 {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #e0f2fe;
+  margin-left: -1.5rem;
+}
+
+.cloudBubble4 {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px #e0f2fe;
+  margin-left: -1.25rem;
+}
+
+.ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+.groundLayers {
+  position: relative;
+}
+
+.grassBack {
+  height: 6rem;
+  background: linear-gradient(to bottom, #22c55e, #16a34a);
+  clip-path: polygon(0 20%, 10% 10%, 20% 25%, 30% 15%, 40% 20%, 50% 10%, 60% 18%, 70% 12%, 80% 22%, 90% 15%, 100% 20%, 100% 100%, 0 100%);
+}
+
+.grassMiddle {
+  height: 5rem;
+  background: linear-gradient(to bottom, #4ade80, #22c55e);
+  margin-top: -4rem;
+  clip-path: polygon(0 30%, 8% 20%, 15% 35%, 25% 22%, 35% 30%, 45% 18%, 55% 28%, 65% 20%, 75% 32%, 85% 24%, 95% 28%, 100% 22%, 100% 100%, 0 100%);
+}
+
+.grassFront {
+  height: 4rem;
+  background: linear-gradient(to bottom, #86efac, #4ade80);
+  margin-top: -3rem;
+  box-shadow: 0 -4px 0 0 #22c55e;
+  clip-path: polygon(0 40%, 12% 35%, 18% 45%, 28% 32%, 38% 40%, 48% 30%, 58% 38%, 68% 28%, 78% 42%, 88% 32%, 95% 38%, 100% 35%, 100% 100%, 0 100%);
+}
+
+.flower {
+  position: absolute;
+}
+
+.flower1 {
+  bottom: 2.5rem;
+  left: 15%;
+}
+
+.flower2 {
+  bottom: 3.5rem;
+  left: 30%;
+}
+
+.flower3 {
+  bottom: 3rem;
+  left: 50%;
+}
+
+.flower4 {
+  bottom: 2.75rem;
+  left: 70%;
+}
+
+.flower5 {
+  bottom: 3.5rem;
+  left: 85%;
+}
+
+.flower6 {
+  bottom: 3rem;
+  left: 60%;
+}
+
+.flowerContainer {
+  position: relative;
+  display: inline-block;
+  width: 1.5rem;
+  height: 2.5rem;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+}
+
+.flowerStem {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.15rem;
+  height: 1.5rem;
+  background: #16a34a;
+}
+
+.flowerPetals {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.flowerPetal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  transform-origin: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.petalPink {
+  background: linear-gradient(to bottom, #fda4af, #fb7185);
+}
+
+.petalYellow {
+  background: linear-gradient(to bottom, #fde047, #facc15);
+}
+
+.petalPurple {
+  background: linear-gradient(to bottom, #d8b4fe, #c084fc);
+}
+
+.flowerCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.centerYellow {
+  background: #facc15;
+}
+
+.centerOrange {
+  background: #fb923c;
+}
+
+.centerYellowLight {
+  background: #fde047;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .sun {
+    top: 2rem;
+    right: 1.5rem;
+  }
+
+  .sunImage {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .grassBack {
+    height: 5rem;
+  }
+
+  .grassMiddle {
+    height: 4rem;
+    margin-top: -3rem;
+  }
+
+  .grassFront {
+    height: 3rem;
+    margin-top: -2rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .sunImage {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .cloudBubble1 {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .cloudBubble2 {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .cloudBubble3 {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .cloudBubble4 {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .flowerContainer {
+    width: 1.25rem;
+    height: 2rem;
+  }
+
+  .flowerPetals {
+    width: 1.25rem;
+    height: 1.25rem;
+    bottom: 1rem;
+  }
+
+  .flowerStem {
+    height: 1.25rem;
+  }
+}
