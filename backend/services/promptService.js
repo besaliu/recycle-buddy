@@ -17,7 +17,6 @@ export function buildRecyclingPrompt(description = null) {
   prompt += `Required JSON Structure:\n`;
   prompt += `{\n`;
   prompt += `  "classification": "recyclable" | "compostable" | "hazardous" | "garbage",\n`;
-  prompt += `  "bin": "blue bin" | "green bin" | "black bin" | "special disposal",\n`;
   prompt += `  "item_name": "string (e.g., 'Plastic Water Bottle')",\n`;
   prompt += `  "reasoning": "string (Explain why based on Santa Cruz guidelines)",\n`;
   prompt += `  "environmental_impact": {\n`;
