@@ -41,7 +41,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
 
         // Extract whole number for individual tree count
         const treesContributed = Math.floor(individualTrees);
-        
+
         // Extract decimal part for growth percentage (0-100)
         const decimalPart = individualTrees - treesContributed;
         const percentage = Math.round(decimalPart * 100);
@@ -236,7 +236,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
                     <div className={styles.contributorInfo}>
                       <p className={styles.contributorName}>{contributor.username}</p>
                       <p className={styles.contributorItems}>
-                        {Math.floor(contributor.individualTrees || 0)} trees
+                        {Math.floor(contributor.individualTrees || 0)} {Math.floor(contributor.individualTrees || 0) === 1 ? 'tree' : 'trees'}
                       </p>
                     </div>
                   </motion.div>
@@ -245,7 +245,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
             </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
