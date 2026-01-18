@@ -1,4 +1,4 @@
-    import admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -30,7 +30,7 @@ function initializeFirebase() {
   try {
     // Get project ID from environment variable or .firebaserc
     let projectId = process.env.FIREBASE_PROJECT_ID;
-    
+
     if (!projectId) {
       try {
         const firebasercPath = join(__dirname, '..', '.firebaserc');
@@ -97,7 +97,6 @@ function initializeFirebase() {
     console.error('\n📋 Setup Options:');
     console.error('   For Local Development:');
     console.error('   1. Set FIREBASE_SERVICE_ACCOUNT_PATH to your service account key file path');
-    console.error('      Example: FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json');
     console.error('');
     console.error('   For Deployment (Cloud Run, Cloud Functions, etc.):');
     console.error('   1. Set FIREBASE_SERVICE_ACCOUNT_JSON to your service account JSON string');
