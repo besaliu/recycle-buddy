@@ -8,7 +8,7 @@ interface ScanTrashProps {
   username: string;
   userId: string;
   onBack: () => void;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: "username" | "welcome" | "scan" | "community") => void;
 }
 
 type TrashCategory = "recyclable" | "compostable" | "hazardous";
@@ -23,7 +23,7 @@ interface ScanResult {
   notes: string;
 }
 
-export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashProps) {
+export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
@@ -115,76 +115,16 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
     }
   };
 
-  // DEV ONLY: Mock submit with fake data
-  const handleDevSubmit = async () => {
-    if (!image) {
-      setError("No image selected");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    // Simulate API delay
-    setTimeout(async () => {
-      const mockCategories: TrashCategory[] = ["recyclable", "compostable", "hazardous"];
-      const category = mockCategories[Math.floor(Math.random() * mockCategories.length)];
-
-      const result: ScanResult = {
-        category,
-        itemName: category === "recyclable" ? "Cardboard Soda Box" : 
-                  category === "compostable" ? "Banana Peel" : 
-                  "Used Battery",
-        bin: category === "recyclable" ? "blue bin" : 
-             category === "compostable" ? "green bin" : 
-             "hazardous waste facility",
-        co2Saved: category === "recyclable" ? "0.5 lbs" : 
-                  category === "compostable" ? "0.3 lbs" : 
-                  "0.1 lbs",
-        recyclableRate: category === "recyclable" ? "70%" : 
-                        category === "compostable" ? "85%" : 
-                        "15%",
-        reasoning: category === "recyclable" 
-          ? "The item is a cardboard box used for packaging soda cans. According to Santa Cruz guidelines, 'cardboard (unwaxed/flattened)' and 'cereal/cracker boxes' are recyclable in the blue bin. This box appears to be unwaxed."
-          : category === "compostable"
-          ? "This is organic waste that can be composted. Banana peels break down quickly and add valuable nutrients to compost. Make sure to remove any stickers before composting."
-          : "Batteries contain hazardous materials like lead, mercury, and lithium that can contaminate soil and water. They must be disposed of at a hazardous waste facility, not in regular trash or recycling.",
-        notes: category === "recyclable"
-          ? "Before recycling, flatten the cardboard box to save space in your blue bin and in the recycling truck! Cardboard can be recycled into new paper products like paperboard, tissue paper, and even new cardboard boxes."
-          : category === "compostable"
-          ? "Composting banana peels helps reduce methane emissions from landfills. They're rich in potassium and other nutrients that plants love. Your compost will be ready in 3-6 months!"
-          : "Many stores and recycling centers offer battery recycling programs. Check with your local waste management facility for drop-off locations. Never throw batteries in regular trash as they can cause fires.",
-      };
-
-      setScanResult(result);
-
-      // Update global stats
-      try {
-        // Parse CO2 saved value (e.g., "0.5 lbs" -> 0.5)
-        const co2Value = parseFloat(result.co2Saved.replace(/[^\d.-]/g, ''));
-        if (!isNaN(co2Value)) {
-          await incrementGlobalCO2Saved(co2Value);
-        }
-        
-        // Increment global items scanned
-        await incrementGlobalItemsScanned(1);
-        
-        // Increment user items scanned
-        await incrementUserItemsScanned(userId, 1);
-
-        // Parse recycle rate (e.g., "70%" -> 0.70)
-        const recycleRate = parseFloat(result.recyclableRate.replace(/[^\d.-]/g, '')) / 100;
-        if (!isNaN(recycleRate)) {
-          await incrementIndividualTrees(userId, recycleRate);
-        }
-      } catch (statsError) {
-        console.error("Error updating stats:", statsError);
-        // Don't show error to user, stats update is not critical
-      }
-
-      setIsLoading(false);
-    }, 1000);
-  };
+  // DEV ONLY: Mock submit with fake data (commented out - uncomment the button below to use)
+  // const handleDevSubmit = async () => {
+  //   if (!image) {
+  //     setError("No image selected");
+  //     return;
+  //   }
+  //   setIsLoading(true);
+  //   setError(null);
+  //   // ... rest of implementation
+  // };
 
   const handleReset = () => {
     setImage(null);
@@ -407,15 +347,46 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
                 <>
                   <motion.button
                     initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    animate={{ 
+                      scale: 1, 
+                      opacity: 1,
+                      boxShadow: isLoading 
+                        ? [
+                            "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)",
+                            "0 5px 0 0 #15803d, 0 6px 25px rgba(34, 197, 94, 0.6)",
+                            "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)"
+                          ]
+                        : "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)"
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 200, 
+                      damping: 15,
+                      boxShadow: {
+                        duration: 1.5,
+                        repeat: isLoading ? Infinity : 0,
+                        ease: "easeInOut"
+                      }
+                    }}
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    whileTap={!isLoading ? { scale: 0.98 } : {}}
                     onClick={handleSubmit}
                     disabled={isLoading}
                     className={`${styles.submitButton} ${isLoading ? styles.submitButtonLoading : ""}`}
                   >
-                    <Send strokeWidth={2.5} />
+                    <motion.div
+                      animate={isLoading ? {
+                        rotate: [0, 90, 180, 270, 360],
+                        scale: [1, 1.2, 1, 1.2, 1]
+                      } : {}}
+                      transition={{
+                        duration: 2,
+                        repeat: isLoading ? Infinity : 0,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <Send strokeWidth={2.5} />
+                    </motion.div>
                     <span>{isLoading ? "Analyzing..." : "Submit Item"}</span>
                   </motion.button>
 

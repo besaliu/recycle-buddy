@@ -1,17 +1,21 @@
 [build]
-  command = "cd frontend && npm install && npm run build"
+  command = "npm run build"
   publish = "frontend/dist"
 
 [functions]
   directory = "backend/functions"
   node_bundler = "esbuild"
 
-# Install backend dependencies before deploying functions
-[build.environment]
-  NPM_FLAGS = "--prefix backend"
+
 
 # Rewrite all /api/* requests to the backend function
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# SPA Catch-all: Redirect all other traffic to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200

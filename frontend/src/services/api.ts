@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
 
 export interface LLMResponse {
   success: boolean;
@@ -109,7 +109,7 @@ export async function getUser(userId: string): Promise<GetUserResponse> {
 export async function analyzeImage(imageFile: File, description?: string): Promise<LLMResponse> {
   const formData = new FormData();
   formData.append('image', imageFile);
-  
+
   if (description && description.trim()) {
     formData.append('description', description.trim());
   }

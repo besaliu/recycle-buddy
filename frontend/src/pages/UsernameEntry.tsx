@@ -66,10 +66,10 @@ export function UsernameEntry({ onSubmit }: UsernameEntryProps) {
     }
   };
 
-  // Dev mode: Skip authentication
-  const handleDevSkip = () => {
-    onSubmit("Dev User", "dev-mode-uuid");
-  };
+  // Dev mode: Skip authentication (commented out - uncomment the button below to use)
+  // const handleDevSkip = () => {
+  //   onSubmit("Dev User", "dev-mode-uuid");
+  // };
 
   if (isLoading) {
     return (

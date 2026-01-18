@@ -23,7 +23,6 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
     treesPlanted: 0,
     co2Saved: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
   const [topContributors, setTopContributors] = useState<TopUser[]>([]);
   const [growthPercentage, setGrowthPercentage] = useState(0);
   const [globalTreeCount, setGlobalTreeCount] = useState(0);
@@ -58,8 +57,6 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
         setTopContributors(topUsers);
       } catch (error) {
         console.error("Failed to fetch community stats:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchStats();
