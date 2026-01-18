@@ -1,28 +1,26 @@
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import { OpenRouter } from '@openrouter/sdk';
 
-// Get the directory of the current module (for ES modules)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables from .env file
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// Load environment variables from .env file (for local development)
+// In Netlify Functions, env vars are set directly
+try {
+  dotenv.config({ path: join(process.cwd(), 'backend', '.env') });
+} catch (e) {
+  // Ignore - env vars should be set by the platform in production
+}
 
 // Get the OpenRouter API key from environment variables
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 if (!OPENROUTER_API_KEY) {
   console.error('Error: OPENROUTER_API_KEY is not set in environment variables');
-  console.error('Please create a .env file in the backend directory with:');
-  console.error('OPENROUTER_API_KEY=your_api_key_here');
-  console.error(`\nLooking for .env at: ${join(__dirname, '..', '.env')}`);
-  process.exit(1);
+  // Don't exit in serverless - just warn (the error will surface when the API is called)
 }
 
-// Log that the API key was loaded (without exposing the actual key)
-console.log('✓ API key loaded from .env file');
+if (OPENROUTER_API_KEY) {
+  console.log('✓ OpenRouter API key loaded');
+}
 
 // Initialize and export OpenRouter client
 export const openRouter = new OpenRouter({
