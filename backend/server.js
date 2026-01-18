@@ -29,3 +29,5 @@ app.listen(PORT, () => {
   console.log(`     GET  http://localhost:${PORT}/api/getGlobalTreeCount`);
   console.log(`     POST http://localhost:${PORT}/api/incrementGlobalTreeCount\n`);
 });
+
+export default app;
