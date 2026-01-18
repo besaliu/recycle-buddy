@@ -730,9 +730,10 @@ router.post('/incrementIndividualTrees/:userId', async (req, res) => {
       const updatedCount = currentCount + incrementAmount;
       
       // Calculate the difference in ceil values to determine how many whole trees were added
-      const currentCeil = Math.ceil(currentCount);
-      const newCeil = Math.ceil(updatedCount);
+      const currentCeil = Math.floor(currentCount);
+      const newCeil = Math.floor(updatedCount);
       const ceilDifference = newCeil - currentCeil;
+      console.log(ceilDifference);
       
       transaction.update(userProfileRef, {
         individualTrees: FieldValue.increment(incrementAmount)

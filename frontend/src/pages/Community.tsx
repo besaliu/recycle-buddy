@@ -53,7 +53,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
           totalItems: items,
           contributors: users,
           treesPlanted: globalTrees, // Use global tree count
-          co2Saved: Math.round(co2), // Round to nearest integer
+          co2Saved: Math.round(co2 * 10) / 10, // Round to 1 decimal place
         });
 
         setGrowthPercentage(percentage);
