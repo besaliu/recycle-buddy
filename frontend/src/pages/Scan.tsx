@@ -347,15 +347,46 @@ export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
                 <>
                   <motion.button
                     initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    animate={{ 
+                      scale: 1, 
+                      opacity: 1,
+                      boxShadow: isLoading 
+                        ? [
+                            "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)",
+                            "0 5px 0 0 #15803d, 0 6px 25px rgba(34, 197, 94, 0.6)",
+                            "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)"
+                          ]
+                        : "0 5px 0 0 #15803d, 0 6px 15px rgba(0, 0, 0, 0.3)"
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 200, 
+                      damping: 15,
+                      boxShadow: {
+                        duration: 1.5,
+                        repeat: isLoading ? Infinity : 0,
+                        ease: "easeInOut"
+                      }
+                    }}
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    whileTap={!isLoading ? { scale: 0.98 } : {}}
                     onClick={handleSubmit}
                     disabled={isLoading}
                     className={`${styles.submitButton} ${isLoading ? styles.submitButtonLoading : ""}`}
                   >
-                    <Send strokeWidth={2.5} />
+                    <motion.div
+                      animate={isLoading ? {
+                        rotate: [0, 90, 180, 270, 360],
+                        scale: [1, 1.2, 1, 1.2, 1]
+                      } : {}}
+                      transition={{
+                        duration: 2,
+                        repeat: isLoading ? Infinity : 0,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <Send strokeWidth={2.5} />
+                    </motion.div>
                     <span>{isLoading ? "Analyzing..." : "Submit Item"}</span>
                   </motion.button>
 
