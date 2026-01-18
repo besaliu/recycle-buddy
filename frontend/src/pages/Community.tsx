@@ -1,14 +1,14 @@
 import { motion } from "motion/react";
-import { ArrowLeft, TreeDeciduous, Users, Award, Leaf } from "lucide-react";
+import { ArrowLeft, TreeDeciduous, Award, Leaf, Star, Sprout, Recycle } from "lucide-react";
 import styles from "./Community.module.css";
 import { Forest3D } from "../components/Forest3D";
 import { useState, useEffect } from "react";
 import {
   getGlobalItemsScanned,
-  getGlobalUserCount,
   getIndividualTrees,
   getGlobalCO2Saved,
   getTopUsers,
+  getGlobalTreeCount,
 } from "../services/api";
 import type { TopUser } from "../services/api";
 
@@ -20,21 +20,21 @@ interface CommunityTreeProps {
 export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
   const [stats, setStats] = useState({
     totalItems: 0,
-    contributors: 0,
     treesPlanted: 0,
     co2Saved: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [topContributors, setTopContributors] = useState<TopUser[]>([]);
   const [growthPercentage, setGrowthPercentage] = useState(0);
+  const [globalTreeCount, setGlobalTreeCount] = useState(0);
 
   // Fetch stats on mount
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [items, users, individualTrees, co2, topUsers] = await Promise.all([
+        const [items, globalTrees, individualTrees, co2, topUsers] = await Promise.all([
           getGlobalItemsScanned(),
-          getGlobalUserCount(),
+          getGlobalTreeCount(),
           getIndividualTrees(userId),
           getGlobalCO2Saved(),
           getTopUsers(),
@@ -49,12 +49,12 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
 
         setStats({
           totalItems: items,
-          contributors: users,
-          treesPlanted: treesContributed, // Use individual tree count
+          treesPlanted: treesContributed, // Use individual tree count for stats display
           co2Saved: Number(co2.toFixed(2)), // Round to 2 decimal places
         });
 
         setGrowthPercentage(percentage);
+        setGlobalTreeCount(globalTrees); // Store global tree count for 3D rendering
         setTopContributors(topUsers);
       } catch (error) {
         console.error("Failed to fetch community stats:", error);
@@ -107,7 +107,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
             className={styles.treeContainer}
           >
             <div className={styles.tree3DContainer}>
-              <Forest3D count={stats.treesPlanted} />
+              <Forest3D count={globalTreeCount} />
             </div>
           </motion.div>
 
@@ -161,24 +161,6 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
                 <p className={styles.statValue}>{stats.totalItems}</p>
               </div>
 
-              {/* Contributors */}
-              <div className={`${styles.statCard} ${styles.people}`}>
-                <div className={styles.statHeader}>
-                  <Users strokeWidth={3} />
-                  <span className={styles.statLabel}>People</span>
-                </div>
-                <p className={styles.statValue}>{stats.contributors}</p>
-              </div>
-
-              {/* Trees Planted */}
-              <div className={`${styles.statCard} ${styles.trees}`}>
-                <div className={styles.statHeader}>
-                  <TreeDeciduous strokeWidth={3} />
-                  <span className={styles.statLabel}>Trees Contributed</span>
-                </div>
-                <p className={styles.statValue}>{stats.treesPlanted}</p>
-              </div>
-
               {/* CO2 Saved */}
               <div className={`${styles.statCard} ${styles.co2}`}>
                 <div className={styles.statHeader}>
@@ -188,6 +170,24 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
                 <p className={`${styles.statValue} ${styles.small}`}>
                   {stats.co2Saved.toFixed(2)} lbs
                 </p>
+              </div>
+
+              {/* Trees Contributed */}
+              <div className={`${styles.statCard} ${styles.trees}`}>
+                <div className={styles.statHeader}>
+                  <TreeDeciduous strokeWidth={3} />
+                  <span className={styles.statLabel}>Trees Contributed</span>
+                </div>
+                <p className={styles.statValue}>{stats.treesPlanted}</p>
+              </div>
+
+              {/* Total Trees */}
+              <div className={`${styles.statCard} ${styles.people}`}>
+                <div className={styles.statHeader}>
+                  <TreeDeciduous strokeWidth={3} />
+                  <span className={styles.statLabel}>Total Trees</span>
+                </div>
+                <p className={styles.statValue}>{globalTreeCount}</p>
               </div>
             </motion.div>
 
@@ -226,7 +226,13 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
 
                     {/* Avatar */}
                     <div className={styles.avatar}>
-                      {index === 0 ? "🌟" : index === 1 ? "🌱" : "♻️"}
+                      {index === 0 ? (
+                        <Star strokeWidth={2.5} fill="#fbbf24" color="#fbbf24" />
+                      ) : index === 1 ? (
+                        <Sprout strokeWidth={2.5} color="#9ca3af" />
+                      ) : (
+                        <Recycle strokeWidth={2.5} />
+                      )}
                     </div>
 
                     {/* Info */}
