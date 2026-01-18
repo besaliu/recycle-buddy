@@ -11,7 +11,7 @@ interface ScanTrashProps {
   onNavigate: (page: "username" | "welcome" | "scan" | "community") => void;
 }
 
-type TrashCategory = "recyclable" | "compostable" | "hazardous";
+type TrashCategory = "recyclable" | "compostable" | "hazardous" | "trash";
 
 interface ScanResult {
   category: TrashCategory;
@@ -61,7 +61,7 @@ export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
       const response = await analyzeImage(imageFile, description);
       
       // Map classification to our category type
-      let category: TrashCategory = "recyclable";
+      let category: TrashCategory = "trash";
       const classification = response.response.classification.toLowerCase();
       
       if (classification.includes("compost")) {
@@ -70,6 +70,8 @@ export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
         category = "hazardous";
       } else if (classification.includes("recycle")) {
         category = "recyclable";
+      } else if (classification.includes("trash") || classification.includes("landfill")) {
+        category = "trash";
       }
 
       const result: ScanResult = {
@@ -182,6 +184,8 @@ export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
         return Sprout;
       case "hazardous":
         return AlertTriangle;
+      case "trash":
+        return Trash2;
     }
   };
 
@@ -194,6 +198,8 @@ export function ScanTrash({ userId, onBack, onNavigate }: ScanTrashProps) {
         return "Compostable";
       case "hazardous":
         return "Hazardous";
+      case "trash":
+        return "Trash";
     }
   };
 
