@@ -9,7 +9,6 @@ import {
   getIndividualTrees,
   getGlobalCO2Saved,
   getTopUsers,
-  getGlobalTreeCount,
 } from "../services/api";
 import type { TopUser } from "../services/api";
 
@@ -33,26 +32,25 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [items, users, globalTrees, individualTrees, co2, topUsers] = await Promise.all([
+        const [items, users, individualTrees, co2, topUsers] = await Promise.all([
           getGlobalItemsScanned(),
           getGlobalUserCount(),
-          getGlobalTreeCount(),
           getIndividualTrees(userId),
           getGlobalCO2Saved(),
           getTopUsers(),
         ]);
 
         // Extract whole number for individual tree count
-        const treesPlanted = Math.floor(individualTrees);
+        const treesContributed = Math.floor(individualTrees);
         
         // Extract decimal part for growth percentage (0-100)
-        const decimalPart = individualTrees - treesPlanted;
+        const decimalPart = individualTrees - treesContributed;
         const percentage = Math.round(decimalPart * 100);
 
         setStats({
           totalItems: items,
           contributors: users,
-          treesPlanted: globalTrees, // Use global tree count
+          treesPlanted: treesContributed, // Use individual tree count
           co2Saved: Number(co2.toFixed(2)), // Round to 2 decimal places
         });
 
