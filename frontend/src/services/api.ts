@@ -1,5 +1,9 @@
 const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
 
+// Debug logging
+console.log('[API Debug] Environment:', import.meta.env.PROD ? 'PRODUCTION' : 'DEVELOPMENT');
+console.log('[API Debug] API_BASE_URL:', API_BASE_URL);
+
 export interface LLMResponse {
   success: boolean;
   response: {
@@ -77,33 +81,65 @@ export function setUserIdCookie(userId: string): void {
 
 // User API functions
 export async function createUser(username: string): Promise<CreateUserResponse> {
-  const response = await fetch(`${API_BASE_URL}/createUser`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username }),
-  });
+  const url = `${API_BASE_URL}/createUser`;
+  console.log('[API Debug] createUser called');
+  console.log('[API Debug] Request URL:', url);
+  console.log('[API Debug] Request body:', { username });
 
-  const data = await response.json();
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username }),
+    });
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to create user');
+    console.log('[API Debug] Response status:', response.status);
+    console.log('[API Debug] Response ok:', response.ok);
+    console.log('[API Debug] Response headers:', Object.fromEntries(response.headers.entries()));
+
+    const data = await response.json();
+    console.log('[API Debug] Response data:', data);
+
+    if (!response.ok) {
+      console.error('[API Debug] Request failed:', data.message);
+      throw new Error(data.message || 'Failed to create user');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('[API Debug] createUser error:', error);
+    console.error('[API Debug] Error type:', error instanceof TypeError ? 'Network/CORS error' : 'Other error');
+    throw error;
   }
-
-  return data;
 }
 
 export async function getUser(userId: string): Promise<GetUserResponse> {
-  const response = await fetch(`${API_BASE_URL}/getUser/${userId}`);
+  const url = `${API_BASE_URL}/getUser/${userId}`;
+  console.log('[API Debug] getUser called');
+  console.log('[API Debug] Request URL:', url);
 
-  const data = await response.json();
+  try {
+    const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to get user');
+    console.log('[API Debug] Response status:', response.status);
+    console.log('[API Debug] Response ok:', response.ok);
+
+    const data = await response.json();
+    console.log('[API Debug] Response data:', data);
+
+    if (!response.ok) {
+      console.error('[API Debug] getUser failed:', data.message);
+      throw new Error(data.message || 'Failed to get user');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('[API Debug] getUser error:', error);
+    console.error('[API Debug] Error type:', error instanceof TypeError ? 'Network/CORS error' : 'Other error');
+    throw error;
   }
-
-  return data;
 }
 
 export async function analyzeImage(imageFile: File, description?: string): Promise<LLMResponse> {

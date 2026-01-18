@@ -1,15 +1,15 @@
 import admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 import dotenv from 'dotenv';
 
-// Get the directory of the current module (for ES modules)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// Load environment variables (for local development)
+// In Netlify Functions, env vars are set directly, so this is a no-op
+try {
+  dotenv.config({ path: join(process.cwd(), 'backend', '.env') });
+} catch (e) {
+  // Ignore - env vars should be set by the platform in production
+}
 
 /**
  * Initialize Firebase Admin SDK
@@ -33,9 +33,18 @@ function initializeFirebase() {
 
     if (!projectId) {
       try {
-        const firebasercPath = join(__dirname, '..', '.firebaserc');
-        const firebaserc = JSON.parse(readFileSync(firebasercPath, 'utf8'));
-        projectId = firebaserc.projects?.default;
+        // Try multiple possible paths for .firebaserc
+        const possiblePaths = [
+          join(process.cwd(), 'backend', '.firebaserc'),
+          join(process.cwd(), '.firebaserc'),
+        ];
+        for (const firebasercPath of possiblePaths) {
+          if (existsSync(firebasercPath)) {
+            const firebaserc = JSON.parse(readFileSync(firebasercPath, 'utf8'));
+            projectId = firebaserc.projects?.default;
+            break;
+          }
+        }
       } catch (e) {
         // .firebaserc not found, will use default
       }

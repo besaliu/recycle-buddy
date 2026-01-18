@@ -26,14 +26,17 @@ app.use('/', healthRoutes); // Root route fallback
 // Error handling middleware (must be after routes)
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`\n🚀 Recycle Buddy API Server running on port ${PORT}`);
-  console.log(`   Health check: http://localhost:${PORT}/api/health`);
-  console.log(`   LLM endpoint: POST http://localhost:${PORT}/api/callLLM`);
-  console.log(`   Firebase endpoints:`);
-  console.log(`     GET  http://localhost:${PORT}/api/getGlobalTreeCount`);
-  console.log(`     POST http://localhost:${PORT}/api/incrementGlobalTreeCount\n`);
-});
+// Only start server when running directly (not in Netlify Functions)
+// Netlify sets the NETLIFY env var automatically
+if (!process.env.NETLIFY) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Recycle Buddy API Server running on port ${PORT}`);
+    console.log(`   Health check: http://localhost:${PORT}/api/health`);
+    console.log(`   LLM endpoint: POST http://localhost:${PORT}/api/callLLM`);
+    console.log(`   Firebase endpoints:`);
+    console.log(`     GET  http://localhost:${PORT}/api/getGlobalTreeCount`);
+    console.log(`     POST http://localhost:${PORT}/api/incrementGlobalTreeCount\n`);
+  });
+}
 
 export default app;
