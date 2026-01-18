@@ -203,7 +203,7 @@ export function UsernameEntry({ onSubmit }: UsernameEntryProps) {
       </motion.form>
 
       {/* Dev Mode Button */}
-      <motion.button
+      {/* <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
@@ -211,7 +211,7 @@ export function UsernameEntry({ onSubmit }: UsernameEntryProps) {
         className={styles.devButton}
       >
         🚀 Dev Mode - Skip Auth
-      </motion.button>
+      </motion.button> */}
     </div>
   );
 }

@@ -420,7 +420,7 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
                   </motion.button>
 
                   {/* DEV ONLY: Mock Submit Button */}
-                  <motion.button
+                  {/* <motion.button
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
@@ -431,7 +431,7 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
                     className={`${styles.devButton} ${isLoading ? styles.submitButtonLoading : ""}`}
                   >
                     <span>🧪 Dev Test</span>
-                  </motion.button>
+                  </motion.button> */}
                 </>
               )}
             </motion.div>
