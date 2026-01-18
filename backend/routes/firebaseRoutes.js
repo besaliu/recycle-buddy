@@ -154,7 +154,7 @@ router.get('/getGlobalItemsScanned', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
+    const globalTotalsRef = db.collection('globalStats').doc('totals');
     const docSnapshot = await globalTotalsRef.get();
 
     let globalItemsScanned = 0;
@@ -289,7 +289,7 @@ router.post('/incrementGlobalUserCount', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
+    const globalTotalsRef = db.collection('globalStats').doc('totals');
     const incrementAmount = req.body.amount || 1;
 
     const newCount = await db.runTransaction(async (transaction) => {
@@ -336,7 +336,7 @@ router.get('/getGlobalUserCount', async (req, res) => {
   }
 
   try {
-    const globalTotalsRef = db.collection('globalStats').doc('4RcobOeey7WWoDIXVTmm');
+    const globalTotalsRef = db.collection('globalStats').doc('totals');
     const docSnapshot = await globalTotalsRef.get();
 
     let globalUserCount = 0;
@@ -539,7 +539,7 @@ router.get('/getUserByUUID/:uuid', async (req, res) => {
 
 /**
  * GET /api/getTopUsers
- * Get the top 3 users ranked by items scanned
+ * Get the top 3 users ranked by individual trees
  */
 router.get('/getTopUsers', async (req, res) => {
   if (!db) {
@@ -552,9 +552,9 @@ router.get('/getTopUsers', async (req, res) => {
   try {
     const usersRef = db.collection('appData');
     
-    // Query users ordered by totalItemsScannedByUser descending, limit to 3
+    // Query users ordered by individualTrees descending, limit to 3
     const snapshot = await usersRef
-      .orderBy('totalItemsScannedByUser', 'desc')
+      .orderBy('individualTrees', 'desc')
       .limit(3)
       .get();
 
@@ -572,6 +572,7 @@ router.get('/getTopUsers', async (req, res) => {
       topUsers.push({
         username: userData.username || 'Unknown',
         totalItemsScannedByUser: userData.totalItemsScannedByUser || 0,
+        individualTrees: userData.individualTrees || 0,
         UUID: userData.UUID || null
       });
     });
@@ -589,7 +590,7 @@ router.get('/getTopUsers', async (req, res) => {
       return res.status(500).json({
         success: false,
         message: 'Failed to retrieve top users. Firestore index may need to be created.',
-        error: 'Please create a composite index on appData collection for totalItemsScannedByUser (descending)',
+        error: 'Please create a composite index on appData collection for individualTrees (descending)',
         hint: 'Visit Firebase Console → Firestore → Indexes to create the required index'
       });
     }
@@ -727,9 +728,24 @@ router.post('/incrementIndividualTrees/:userId', async (req, res) => {
       const doc = await transaction.get(userProfileRef);
       const currentCount = doc.data().individualTrees || 0;
       const updatedCount = currentCount + incrementAmount;
+      
+      // Calculate the difference in ceil values to determine how many whole trees were added
+      const currentCeil = Math.ceil(currentCount);
+      const newCeil = Math.ceil(updatedCount);
+      const ceilDifference = newCeil - currentCeil;
+      
       transaction.update(userProfileRef, {
         individualTrees: FieldValue.increment(incrementAmount)
       });
+      
+      // If ceil increased, increment global tree count by the difference
+      if (ceilDifference > 0) {
+        const globalTreeCounterRef = db.collection("globalStats").doc("totals");
+        transaction.update(globalTreeCounterRef, {
+          globalTreeCount: FieldValue.increment(ceilDifference)
+        });
+      }
+      
       return updatedCount;
     });
 

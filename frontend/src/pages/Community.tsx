@@ -9,6 +9,7 @@ import {
   getIndividualTrees,
   getGlobalCO2Saved,
   getTopUsers,
+  getGlobalTreeCount,
 } from "../services/api";
 import type { TopUser } from "../services/api";
 
@@ -32,25 +33,26 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [items, users, treesValue, co2, topUsers] = await Promise.all([
+        const [items, users, globalTrees, individualTrees, co2, topUsers] = await Promise.all([
           getGlobalItemsScanned(),
           getGlobalUserCount(),
+          getGlobalTreeCount(),
           getIndividualTrees(userId),
           getGlobalCO2Saved(),
           getTopUsers(),
         ]);
 
-        // Extract whole number for tree count
-        const treesPlanted = Math.floor(treesValue);
+        // Extract whole number for individual tree count
+        const treesPlanted = Math.floor(individualTrees);
         
         // Extract decimal part for growth percentage (0-100)
-        const decimalPart = treesValue - treesPlanted;
+        const decimalPart = individualTrees - treesPlanted;
         const percentage = Math.round(decimalPart * 100);
 
         setStats({
           totalItems: items,
           contributors: users,
-          treesPlanted: treesPlanted,
+          treesPlanted: globalTrees, // Use global tree count
           co2Saved: Math.round(co2), // Round to nearest integer
         });
 
@@ -221,7 +223,9 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
                     {/* Info */}
                     <div className={styles.contributorInfo}>
                       <p className={styles.contributorName}>{contributor.username}</p>
-                      <p className={styles.contributorItems}>{contributor.totalItemsScannedByUser} items</p>
+                      <p className={styles.contributorItems}>
+                        {Math.floor(contributor.individualTrees || 0)} trees
+                      </p>
                     </div>
                   </motion.div>
                 ))}

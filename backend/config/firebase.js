@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+    import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';

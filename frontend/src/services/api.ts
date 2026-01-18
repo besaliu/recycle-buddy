@@ -49,6 +49,7 @@ export interface ErrorResponse {
 export interface TopUser {
   username: string;
   totalItemsScannedByUser: number;
+  individualTrees: number;
   UUID: string;
 }
 
@@ -201,6 +202,17 @@ export async function getGlobalCO2Saved(): Promise<number> {
   return data.globalCO2Saved;
 }
 
+export async function getGlobalTreeCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getGlobalTreeCount`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get global tree count');
+  }
+
+  return data.globalTreeCount;
+}
+
 export async function getTopUsers(): Promise<TopUser[]> {
   const response = await fetch(`${API_BASE_URL}/getTopUsers`);
   const data = await response.json();
@@ -224,5 +236,31 @@ export async function incrementIndividualTrees(userId: string, amount: number): 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || 'Failed to increment individual trees');
+  }
+}
+
+export async function getUserItemsScanned(userId: string): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/getUserItemsScanned/${userId}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to get user items scanned');
+  }
+
+  return data.totalItemsScannedByUser;
+}
+
+export async function incrementUserItemsScanned(userId: string, amount: number = 1): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/incrementUserItemsScanned/${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to increment user items scanned');
   }
 }

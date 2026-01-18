@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Camera, ArrowLeft, Type, Send, X, Recycle, AlertTriangle, Sprout, TreeDeciduous, Trash2, Cloud, TrendingUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import styles from "./Scan.module.css";
-import { analyzeImage, incrementGlobalCO2Saved, incrementGlobalItemsScanned, incrementIndividualTrees } from "../services/api";
+import { analyzeImage, incrementGlobalCO2Saved, incrementGlobalItemsScanned, incrementIndividualTrees, incrementUserItemsScanned } from "../services/api";
 
 interface ScanTrashProps {
   username: string;
@@ -94,6 +94,9 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
         
         // Increment global items scanned
         await incrementGlobalItemsScanned(1);
+        
+        // Increment user items scanned
+        await incrementUserItemsScanned(userId, 1);
 
         // Parse recycle rate (e.g., "70%" -> 0.70)
         const recycleRate = parseFloat(result.recyclableRate.replace(/[^\d.-]/g, '')) / 100;
@@ -165,6 +168,9 @@ export function ScanTrash({ username, userId, onBack, onNavigate }: ScanTrashPro
         
         // Increment global items scanned
         await incrementGlobalItemsScanned(1);
+        
+        // Increment user items scanned
+        await incrementUserItemsScanned(userId, 1);
 
         // Parse recycle rate (e.g., "70%" -> 0.70)
         const recycleRate = parseFloat(result.recyclableRate.replace(/[^\d.-]/g, '')) / 100;
