@@ -1,13 +1,13 @@
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
-import { useMemo, Suspense, useRef, useEffect } from "react";
+import { useMemo, Suspense } from "react";
 import tree1Model from "../assets/tree1.glb";
 import tree2Model from "../assets/tree2.glb";
 import tree3Model from "../assets/tree3.glb";
 
 // Component to ensure Canvas renders continuously until models load
 function RenderEnsurer() {
-  const { invalidate, gl } = useThree();
+  const { invalidate } = useThree();
   
   useFrame(() => {
     // Continuously invalidate to ensure rendering happens

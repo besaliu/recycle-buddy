@@ -4,7 +4,7 @@ import styles from "./Welcome.module.css";
 
 interface WelcomeProps {
   username: string;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: "username" | "welcome" | "scan" | "community") => void;
 }
 
 export function Welcome({ username, onNavigate }: WelcomeProps) {
