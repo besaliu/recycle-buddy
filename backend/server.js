@@ -12,10 +12,16 @@ const PORT = process.env.PORT || 3000;
 setupMiddleware(app);
 
 // Routes
-app.use('/api', llmRoutes);
-app.use('/api', healthRoutes);
-app.use('/api', firebaseRoutes);
-app.use('/', healthRoutes); // Root route
+const router = express.Router();
+router.use(llmRoutes);
+router.use(healthRoutes);
+router.use(firebaseRoutes);
+
+// Mount main router on both local and Netlify paths
+app.use('/api', router);
+app.use('/.netlify/functions/api', router); // Required for Netlify Functions
+
+app.use('/', healthRoutes); // Root route fallback
 
 // Error handling middleware (must be after routes)
 app.use(errorHandler);
