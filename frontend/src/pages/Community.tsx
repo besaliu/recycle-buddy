@@ -53,7 +53,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
           totalItems: items,
           contributors: users,
           treesPlanted: globalTrees, // Use global tree count
-          co2Saved: Math.round(co2), // Round to nearest integer
+          co2Saved: Number(co2.toFixed(2)), // Round to 2 decimal places
         });
 
         setGrowthPercentage(percentage);
@@ -120,13 +120,24 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
             transition={{ delay: 0.5, duration: 0.5 }}
             className={styles.progressSection}
           >
-            <div className={styles.progressBar}>
+            <div className={styles.progressBarWrapper}>
               <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${growthPercentage}%` }}
-                transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
-                className={styles.progressFill}
-              />
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.9, type: "spring", stiffness: 200, damping: 15 }}
+                className={styles.percentageBadge}
+                style={{ left: `${growthPercentage}%` }}
+              >
+                {growthPercentage}%
+              </motion.div>
+              <div className={styles.progressBar}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${growthPercentage}%` }}
+                  transition={{ delay: 0.7, duration: 1, ease: "easeOut" }}
+                  className={styles.progressFill}
+                />
+              </div>
             </div>
             <p className={styles.progressText}>
               Next tree at 100%!
@@ -165,7 +176,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
               <div className={`${styles.statCard} ${styles.trees}`}>
                 <div className={styles.statHeader}>
                   <TreeDeciduous strokeWidth={3} />
-                  <span className={styles.statLabel}>Trees</span>
+                  <span className={styles.statLabel}>Trees Contributed</span>
                 </div>
                 <p className={styles.statValue}>{stats.treesPlanted}</p>
               </div>
@@ -177,7 +188,7 @@ export function CommunityTree({ userId, onBack }: CommunityTreeProps) {
                   <span className={styles.statLabel}>CO₂</span>
                 </div>
                 <p className={`${styles.statValue} ${styles.small}`}>
-                  {stats.co2Saved} lbs
+                  {stats.co2Saved.toFixed(2)} lbs
                 </p>
               </div>
             </motion.div>
