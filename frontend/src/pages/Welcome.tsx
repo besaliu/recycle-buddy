@@ -80,7 +80,7 @@ export function Welcome({ username, onNavigate }: WelcomeProps) {
           <div className={styles.iconWrapper}>
             <TreeDeciduous strokeWidth={2.5} />
           </div>
-          <span>Community Tree</span>
+          <span>Community Forest</span>
         </motion.button>
       </div>
     </div>
