@@ -13,9 +13,9 @@
         "firebase-functions": "^6.0.0",
         "firebase-admin": "^13.0.0",
         "sharp": "^0.34.5",
-        "serverless-http": "^3.2.0"
+        "serverless-http": "^4.0.0"
     },
     "scripts": {
-        "build": "cd frontend && npm install && npm run build"
+        "build": "npm install --prefix backend && cd frontend && npm install && npm run build"
     }
 }
